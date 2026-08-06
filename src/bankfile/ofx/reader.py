@@ -71,14 +71,38 @@ def _transaction_currency(node: Node, default: str | None) -> str | None:
     return default
 
 
-def _raw_fields(node: Node) -> dict[str, str | None]:
+def _raw_fields(node: Node, warnings: list[ReadWarning]) -> dict[str, str | None]:
     """Every direct child, known or not.
 
     Keeping the unknown ones is the whole point of the `tags-outside-spec` case: a real
     Australian file carries `VALUEDATE`, `TRANSACTIONSPLIT`, `CATEGORY` and `ACCTBAL` inside a
     transaction, and both existing parsers drop them in silence.
+
+    A repeated tag keeps the FIRST value, which is what every normalised field above reads, and
+    warns. Built as a plain dict comprehension this took the LAST, so a transaction carrying
+    `TRNAMT` twice reported -10.00 as its amount while its own `raw` said -9999.00, with
+    nothing to say the two disagreed. A caller auditing the normalised figure against the raw
+    one would have found a different number and no explanation.
     """
-    return {child.tag: child.value for child in node.children}
+    fields: dict[str, str | None] = {}
+    for child in node.children:
+        if child.tag in fields:
+            warnings.append(
+                ReadWarning(
+                    rule="tag",
+                    field=child.tag,
+                    value=child.value,
+                    message=(
+                        f"{child.tag} appears more than once in this transaction. The first "
+                        f"value is the one used everywhere; this later one is reported here "
+                        f"and not merged, because picking silently between two values of the "
+                        f"same field is how a wrong figure gets in."
+                    ),
+                )
+            )
+            continue
+        fields[child.tag] = child.value
+    return fields
 
 
 def _read_transaction(
@@ -103,11 +127,13 @@ def _read_transaction(
             ReadWarning(
                 rule="tag",
                 field="STMTTRN",
-                value=str(_raw_fields(node)),
+                value=",".join(sorted(_raw_fields(node, []))),
                 message=(
-                    f"transaction dropped, it has no {', '.join(missing)}. Its raw fields are "
-                    f"kept in this warning: a line without one of these cannot be reconciled, "
-                    f"and filling one in would invent a figure."
+                    f"transaction dropped, it has no {', '.join(missing)}. A line without one "
+                    f"of those cannot be reconciled, and filling one in would invent a figure. "
+                    f"The tags it did carry are listed above; their VALUES are deliberately not "
+                    f"repeated here, because warnings end up in logs and in an MCP client's "
+                    f"server log, and a counterparty name does not belong in either."
                 ),
             )
         )
@@ -142,7 +168,7 @@ def _read_transaction(
         date=date,
         amount=amount,
         currency=currency,
-        raw=_raw_fields(node),
+        raw=_raw_fields(node, warnings),
         booking_date=booking_date,
         counterparty_name=_text(node, "NAME") or (payee.child_text("NAME") if payee else None),
         counterparty_account=account_to.text("ACCTID") if account_to else None,

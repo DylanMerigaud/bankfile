@@ -48,7 +48,7 @@ mcp = ["mcp>=2.0"]
 
 [project.scripts]
 bankfile = "bankfile.cli:main"
-bankfile-mcp = "bankfile.mcp.server:main"
+bankfile-mcp = "bankfile.mcp:main"
 
 [dependency-groups]
 # mcp is in the dev group as well so that ruff and mypy actually check the server.
@@ -99,6 +99,10 @@ ignore = [
 # parameters ARE its schema, which is the only thing a model sees; folding the filters into a
 # nested object would hide them from the model and make the tool harder to call, not easier.
 "src/bankfile/mcp/server.py" = ["T20", "PLR0913"]
+# The launcher defers its import ON PURPOSE, and that deferral IS the feature: it is what lets
+# `bankfile-mcp` answer with an instruction instead of a traceback when the optional dependency
+# is missing. The answer goes to stderr because at that point no transport exists to answer on.
+"src/bankfile/mcp/__init__.py" = ["T20", "PLC0415"]
 "scripts/**" = ["T20"]
 # measure_parsers.py imports ofxparse and ofxtools INSIDE its functions on purpose. Neither is
 # a dependency of this package, and neither should ever become one: nothing here may pull in an

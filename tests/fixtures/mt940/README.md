@@ -1,6 +1,6 @@
 # MT940 fixtures, and where they come from
 
-54 real statement files from 16 named banks, copied verbatim from the test suite of
+54 real statement files, copied verbatim from the test suite of
 [wolph/mt940](https://github.com/wolph/mt940) (the `mt-940` package this project depends on).
 They are inputs, not expected outputs: the assertions live in `tests/test_mt940_adapter.py`.
 
@@ -21,16 +21,20 @@ of them changes, so the next edit cannot pass unread.
 | directory | files | bank or origin |
 |---|---|---|
 | `ASNB/` | 2 | ASN Bank (NL). Puts a full IBAN in the `:61:` customer reference, which the standard `:61:` tag cannot read. |
-| `betterplace/` | 9 | German SEPA exports collected by betterplace.org, including a file with a byte outside the SWIFT character set. |
+| `betterplace/` | 10 | German SEPA exports collected by betterplace.org, including a file with a byte outside the SWIFT character set. |
 | `citi/` | 1 | Citibank (US). |
 | `cmxl/` | 11 | German and Polish files collected by the `cmxl` Ruby parser. |
 | `jejik/` | 9 | ABN AMRO, ING, KNAB, PostFinance (CH), Rabobank, SNS, Triodos, plus a generic file. |
 | `mBank/` | 3 | mBank (PL), MT940 and MT942. |
 | `sberbank/` | 1 | Sberbank (HU), in HUF. |
-| `self-provided/` | 15 | Sparkassen, Raiffeisen (HU, encoded in a DOS code page), and edge cases contributed to the parser. |
+| `self-provided/` | 17 | Sparkassen, Raiffeisen (HU, encoded in a DOS code page), and edge cases contributed to the parser. |
 
 Files whose name says `broken`, `invalid` or `malformed` are kept on purpose: they are the
 inputs for the tests that check we degrade instead of raising.
+
+These counts are the tree's, not a memory of it. They were wrong in the first version of this
+file, by one in one directory and two in another, which is exactly how a table stops being
+checked and starts being decoration.
 
 ## Copyright
 

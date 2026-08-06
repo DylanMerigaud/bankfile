@@ -43,6 +43,31 @@ jobs:
       - run: uv pip install "mt-940==5.0.0"
       - run: uv run --no-sync pytest
 
+  package:
+    # Build the distribution and install it, every time. Packaging defects are invisible to a
+    # test suite run from the source tree: the wheel once claimed "Typing :: Typed" while
+    # shipping no py.typed, so every consumer's type checker saw Any where the API returns
+    # Decimal, and nothing here would have noticed until somebody complained.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv build
+      - name: the wheel must ship its type marker
+        run: unzip -l dist/*.whl | grep -q 'bankfile/py.typed'
+      - name: no borrowed fixture may ride the sdist
+        run: |
+          if tar tzf dist/*.tar.gz | grep -E 'tests/fixtures/.*\.(sta|txt|ofx|qfx)$'; then
+            echo "a borrowed bank fixture is inside the sdist" >&2
+            exit 1
+          fi
+      - name: the installed console scripts must work
+        run: |
+          uv venv /tmp/fresh
+          VIRTUAL_ENV=/tmp/fresh uv pip install "$(ls dist/*.whl)[mcp]"
+          /tmp/fresh/bin/bankfile tests/fixtures/paired/account-a.sta --json > /dev/null
+          /tmp/fresh/bin/bankfile-mcp --help > /dev/null
+
   corpus:
     # The corpus is the ASSET of the project, not the code: code can be regenerated, the real
     # deviations of banks cannot be invented. So it is validated just like the tests.

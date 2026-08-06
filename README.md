@@ -1,5 +1,9 @@
 # bankfile
 
+[![ci](https://github.com/DylanMerigaud/bankfile/actions/workflows/ci.yml/badge.svg)](https://github.com/DylanMerigaud/bankfile/actions/workflows/ci.yml)
+[![pypi](https://img.shields.io/pypi/v/bankfile.svg)](https://pypi.org/project/bankfile/)
+[![python](https://img.shields.io/pypi/pyversions/bankfile.svg)](https://pypi.org/project/bankfile/)
+
 One schema for every bank file: MT940, MT942, CAMT.053, BAI2, OFX/QFX.
 
 The name says `file` and not `statement`, and that is deliberate: the day the library reads a
@@ -137,6 +141,11 @@ All three tools are annotated read-only and closed-world, so clients that honour
 stop asking you to approve every call. Paging through one account is otherwise twenty approval
 prompts, which is how a working server ends up unused.
 
+## Changes
+
+[CHANGELOG.md](CHANGELOG.md). Anything that can change a figure gets its own line, and says
+which figure.
+
 ## Contributing
 
 A report carrying an anonymised file excerpt is worth more than a code fix. See
@@ -145,4 +154,9 @@ cannot read".
 
 ## License
 
-MIT.
+MIT for the code, the corpus and the documentation.
+
+`tests/fixtures/mt940/` holds bank statement files borrowed from the test suites of other
+projects, chiefly [wolph/mt940](https://github.com/wolph/mt940), and those keep their own
+BSD-3-Clause terms with the notices reproduced beside them. They are test inputs, they are not
+distributed in the published package, and they are not ours to relicense.

@@ -187,10 +187,16 @@ def build_server(root: Path) -> MCPServer:
     )
 
     def locate(path: str) -> tuple[Path | None, Error | None]:
+        # ValueError as well as OSError, and the whole body inside the guard. A model supplies
+        # this string, so it will eventually contain a null byte (ValueError, not OSError) or
+        # five thousand characters (ENAMETOOLONG, raised by is_file() which used to sit outside
+        # the try). Both crashed the tool with a raw ToolError instead of the envelope this
+        # server documents, which is the one thing every tool here promises never to do.
         try:
             given = Path(path)
             candidate = (given if given.is_absolute() else resolved_root / given).resolve()
-        except OSError as exc:
+            readable = candidate.is_file()
+        except (OSError, ValueError) as exc:
             return None, Error(kind="unreadable_path", message=str(exc), path=path)
         if resolved_root not in candidate.parents and candidate != resolved_root:
             return None, Error(
@@ -198,7 +204,7 @@ def build_server(root: Path) -> MCPServer:
                 message=f"this server only reads under {resolved_root}",
                 path=path,
             )
-        if not candidate.is_file():
+        if not readable:
             return None, Error(kind="unreadable_path", message="no such file", path=path)
         return candidate, None
 
