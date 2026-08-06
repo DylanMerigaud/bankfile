@@ -1,0 +1,521 @@
+{
+  "tests/fixtures/mt940/ASNB/mt940.txt": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 46,
+    "reviewed": "2026-08-06",
+    "sha256": "4cb5eb5bce85fbd83b287cbe6966801e527167edf5482195569f532a9a81663f",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/ASNB/mt940_with_spaces_for_entry_date.txt": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 46,
+    "reviewed": "2026-08-06",
+    "sha256": "a8017f50a6fd5f7c6cf7e4c9913810fb81b751f852e0b27376b8a7d24ce34829",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/amount_formats.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "5fdc957ae2c8244f2165585dc47bb5203ba47453ec2c05068851481ee08c0840",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/currency_in_25.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "f05711ec8685f5c324d4eb782ceaa08df7f944d82aceb85fb1bd97e5f480f1d2",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/empty_86.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "edf308ecf3949b1bb312b80613e759ac0f6878cca611f70b42577a5752605cf5",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/empty_entry_date.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "13fa284fd1bd71f78e9f79c2c736ad9a004da5bf6e0af995568dd0b9443eb757",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/empty_line.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "dbc58add0386804965ed1f4d95fb75323dbe48f3f485e3c29a228a91d7c1bb74",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/missing_crlf_at_end.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "b41ebd4b9043cef0f0391fd5ec7917523a96e7271c97d00668fdf57dbd709f62",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/sepa_mt9401.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 174,
+    "reviewed": "2026-08-06",
+    "sha256": "97941dd131faedcf91d1f7b4876372a3911dbd6525485087038c9f4ffaa17d1a",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/sepa_snippet.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 17,
+    "reviewed": "2026-08-06",
+    "sha256": "c176e302817ec492a1fd711e2c2daf4e87657763b67c72c33c38f30cdd1a495a",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/sepa_snippet_broken.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 4,
+    "reviewed": "2026-08-06",
+    "sha256": "33f0866e541b8988d5f9e5501ade6887820040006c429dbb0f61af1a839f15d9",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/betterplace/with_binary_character.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 1,
+    "reviewed": "2026-08-06",
+    "sha256": "918e3d7c2ff3675d4868088d9933b0774e359f143321025f55b2336edb211335",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/citi/mt940.txt": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "4fcc80c52d26136d470dd226fb4f89bcf5da5d60b236ce4c35ace00de41010a6",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/account_balance_credit.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "b682059e207f6c2304bd4648b9510530c90dcb8ab374908d92e1354b73c05b2a",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/account_balance_debit.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "fb8d400f7de0e809ba0575e92de726bc13cadcc136c8cce540691616b0917394",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/account_identification_iban.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 2,
+    "reviewed": "2026-08-06",
+    "sha256": "fcc86cb5e95a1096eb070edd0618640713f3427a7bd3b73dc130e5c24f66ed07",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/account_identification_legacy.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "8ad6670af0c597b2db59163d980473abbf558e318028dd42618cb6dcb9daf2c4",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/available_balance.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "402422e5a43250b70c2e9b7a79b5a86b1b5cd6a64533e33e98de4ad9458ed741",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/closing_balance.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "4b40274f9ed450cc479554a3bdb557002a9809ebf5a2652c815e230fbd41e5d9",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/mt940.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 10,
+    "reviewed": "2026-08-06",
+    "sha256": "9e3fbe0c78b7a6b0f2be40962bfe4381c48d88901803f1d304b2b1367c1d84ee",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/reference.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "21ea9a7b21ef0d2590c99a8d23fd008b5821930aa4ba40bc6c6a0f3c576f9ede",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/statement_details.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 2,
+    "reviewed": "2026-08-06",
+    "sha256": "08d624bd8748cf5655fc3a39df4af20d0667e3bf5c7ec3e323c6f3c985d79a89",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/statement_line.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 1,
+    "reviewed": "2026-08-06",
+    "sha256": "6dbffdb49d53cbf645ccdad136541c2d488e7b893081205b36fe532b4ac1855f",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/cmxl/statement_number.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "a0dd9ec195928d0ced7320e1ed308bac80cee747f77ab0a48f3654b81b7c27ab",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/abnamro.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 1,
+    "reviewed": "2026-08-06",
+    "sha256": "ff95df84734f3905c0ea67f3f9302787d369c28d6322c96eb0d36b15fbbe79b6",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/generic.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "c84c6983e0e17918fbb75d57259122d8f1d67381c806c075fd03a7f511e6af3d",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/ing.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 2,
+    "reviewed": "2026-08-06",
+    "sha256": "81a962640defec6d4850d6ae535ef861b89b99a2b72270778dd09f0c78e65207",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/knab.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 3,
+    "reviewed": "2026-08-06",
+    "sha256": "51fe450b8e9c7135a1310ef35e9dd307b9b25ca3a473f70ad6a8bca2aa2d198f",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/postfinance.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 6,
+    "reviewed": "2026-08-06",
+    "sha256": "814070caa85c1441be9d1ffd1a200102b81d346a6743eaeb9a5a962928af0594",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/rabobank-iban.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 6,
+    "reviewed": "2026-08-06",
+    "sha256": "f05d1f83985861d55e24e74a26bb482bf2979fafec1053383cc83fd86f918b88",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/rabobank.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 8,
+    "reviewed": "2026-08-06",
+    "sha256": "2101d528193e446d1e086c394c05bde91ffdef3249c38c43917e6097ee20c713",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/sns.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "2537a088c0eed820da57d98c7c0235ea31959d1c36a04e67e3ad5630afad3196",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/jejik/triodos.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 1,
+    "reviewed": "2026-08-06",
+    "sha256": "ce0a7ff175ce48709e93328039a035bbb6ab2be7cc77adae9b19cbb2d467d42e",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/mBank/mt940.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 8,
+    "reviewed": "2026-08-06",
+    "sha256": "e4ef5dd042ea429cac3df3abcf5bbb3425efe2254091474c8156b9907dc9aabf",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/mBank/mt942.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 8,
+    "reviewed": "2026-08-06",
+    "sha256": "c07c39c9b23070b05d702ea667de88596006c4b2bd49fae4ad1b3c734d6ac218",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/mBank/with_newline_in_tnr.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 6,
+    "reviewed": "2026-08-06",
+    "sha256": "1c80b46a5e469d785e23cb202852047e936f649637d77932257cd30bb74b5287",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/sberbank/171011_01234945.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 11,
+    "reviewed": "2026-08-06",
+    "sha256": "a3414bb20a6241c2bc44f3b5bd3d5749264f44fa9c626b1bc50cfbc6d4e9a1bd",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/account_identification.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "497ab91d11c3ccd3d7792a6f25d1d3448821b5fd996440bb6bf398c34fbd10df",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/details_60-63.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 2,
+    "reviewed": "2026-08-06",
+    "sha256": "7129ed467ffeba9968dd01d95e5512050bbea051b16ed3d96a85744bbea7b114",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/empty_non_swift.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "ed63ff29daa3e24eac4807c2d0feccffa181663c848fc85d438be18745537faf",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/february_30.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "5fefbd6819b6f5de33e99c4a3e4384fb5588fda33094c9782842c4dcf26ce130",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/gv_codes.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 2,
+    "reviewed": "2026-08-06",
+    "sha256": "21ae31ed5603544443cbd601383209a381d9602bbd08402c70f668297714699f",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/invalid_statement.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "bf794518e35d7f1ce3a50b3058c4191bb9401e568fc645d77e10b0f404cf1f22",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/long_statement_number.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 2,
+    "reviewed": "2026-08-06",
+    "sha256": "9bfcd710a03c27950b1e41e767d6bf9ebc2d32be4da40f6dfd1e654c319d369a",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/malformed_details.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 5,
+    "reviewed": "2026-08-06",
+    "sha256": "4a904c08026edada008e994f0e7ad7b35539feebf6e8bbeaf728be78cc2f87ca",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/mt942.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 1,
+    "reviewed": "2026-08-06",
+    "sha256": "74c8ab17402f33a0cea371c63f579bda655251945fafdc0dae2a760718968fc7",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/multiline.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 11,
+    "reviewed": "2026-08-06",
+    "sha256": "51a2091a4ee92ace1c297d6699683f83f223b4837995ce1947f9c9c164ac71eb",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/overly_long_details.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 5,
+    "reviewed": "2026-08-06",
+    "sha256": "c0cdb1b183f1faf18960963188c25f024593df68e70940e673528b2c6e37b583",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/raiffeisen-cmi.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 3,
+    "reviewed": "2026-08-06",
+    "sha256": "2e5e95adae384a8ed2400dc6521e037aaeaea80d97709a6a3581ce8965e8ff84",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/raphaelm.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 1,
+    "reviewed": "2026-08-06",
+    "sha256": "5058f8b3cd2435d90d44245959a9977497dc282669182b29a3bf5f7ad33994e5",
+    "what_the_scan_flags": [
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/sparkassen.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "987c13c09d4bdd10337323e0a20c5a13bfd15a2d9092e3181433ff5365d9402f",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/transaction_details_wrapped.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "fbb51a6c149edeb17366351d064e6d8a17e562cd1ffd9ca99cf9640c0b400dcc",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/whitespace.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "d6066adc3cfcffcd0dc1d2f27befbe321171c87bdff4cf7eb184167bc862cd00",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/mt940/self-provided/wrapped_timestamp.sta": {
+    "cleared_because": "third-party test data, redistributed under its own licence; read line by line for personal data on 2026-08-06 and the names, account identifiers and card traces found were replaced by same-length placeholders. What the scan still flags is structural: account identifiers a parser must read, already scrubbed upstream or by us.",
+    "leak_scan_matches": 3,
+    "reviewed": "2026-08-06",
+    "sha256": "c38186f1ffdd9918290b3263ce3a9d0b6d716b2e8cff3789d9dc955c2669931f",
+    "what_the_scan_flags": [
+      "IBAN-shaped account identifiers",
+      "digit runs of 13 or more"
+    ]
+  },
+  "tests/fixtures/paired/account-a.ofx": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "00965244a85c022983c199467ace12ac8e85fa4076262c5415e1b435806418ef",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  },
+  "tests/fixtures/paired/account-a.sta": {
+    "cleared_because": "no leak pattern in this file",
+    "leak_scan_matches": 0,
+    "reviewed": "2026-08-06",
+    "sha256": "0157eeb860df4eea4651c9cead6738a1f0093d233b90951f477448d52025f642",
+    "what_the_scan_flags": [
+      "nothing"
+    ]
+  }
+}

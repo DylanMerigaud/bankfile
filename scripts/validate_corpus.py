@@ -21,11 +21,20 @@ It checks six things, and each one maps to a way this kind of repository rots:
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 import sys
 from pathlib import Path
 
-BANKS = Path(__file__).resolve().parent.parent / "corpus" / "banks"
+ROOT = Path(__file__).resolve().parent.parent
+BANKS = ROOT / "corpus" / "banks"
+# The bank files borrowed from other projects' test suites. They are NOT ours and they were
+# NOT anonymised by us, which is exactly why they need their own guard: an audit found a named
+# person's real statement in here, with balances, a jewellery payment and four days of card
+# spending across two towns. Our own leak scan had never looked at this directory.
+VENDORED = ROOT / "tests" / "fixtures"
+REVIEWED = ROOT / "tests" / "fixtures" / "REVIEWED.json"
 LEAKS = (
     # A full IBAN.
     re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{12,30}\b"),
@@ -76,6 +85,40 @@ def check_note(note: Path, fixture: Path) -> list[str]:
     return faults
 
 
+def check_vendored() -> list[str]:
+    """Every borrowed fixture must have been read by a human, and must not have moved since.
+
+    A plain allow-list of strings would be useless here: these files legitimately contain
+    IBAN-shaped account numbers and long digit runs, so the leak regexes fire on most of them.
+    What we actually need to know is that a person looked at THIS EXACT CONTENT and cleared it.
+    So the manifest stores a hash. Change one byte and the clearance no longer applies, and CI
+    says so until somebody reads the file again.
+    """
+    if not VENDORED.is_dir():
+        return []
+    reviewed = json.loads(REVIEWED.read_text(encoding="utf-8")) if REVIEWED.exists() else {}
+    faults = []
+    seen = set()
+    for f in sorted(VENDORED.rglob("*")):
+        if not f.is_file() or f.name in ("REVIEWED.json", "README.md", "LICENSE"):
+            continue
+        key = str(f.relative_to(ROOT))
+        seen.add(key)
+        digest = hashlib.sha256(f.read_bytes()).hexdigest()
+        entry = reviewed.get(key)
+        if entry is None:
+            faults.append(f"{key}: borrowed fixture never reviewed, add it to {REVIEWED.name}")
+        elif entry.get("sha256") != digest:
+            faults.append(
+                f"{key}: changed since it was reviewed, read it again and update {REVIEWED.name}"
+            )
+    faults.extend(
+        f"{key}: reviewed in {REVIEWED.name} but no longer in the tree"
+        for key in sorted(set(reviewed) - seen)
+    )
+    return faults
+
+
 def main() -> int:
     if not BANKS.is_dir():
         print(f"{BANKS} is missing")
@@ -99,6 +142,7 @@ def main() -> int:
             faults.append(f"{note}: describes a deviation with no fixture, so not reproducible")
             continue
         faults += leaks(note)
+    faults += check_vendored()
     for x in faults:
         print(f"  {x}")
     print(f"{len(fixtures)} fixtures, {len(faults)} faults")

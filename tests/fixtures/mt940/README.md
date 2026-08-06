@@ -4,8 +4,17 @@
 [wolph/mt940](https://github.com/wolph/mt940) (the `mt-940` package this project depends on).
 They are inputs, not expected outputs: the assertions live in `tests/test_mt940_adapter.py`.
 
-Nothing here was edited. A fixture that is reformatted stops being evidence of what a bank
-actually sends, which is the only reason to keep it in the repository.
+These files were edited in exactly one way, on 2026-08-06, and it matters enough to say
+precisely how. An audit found real personal data in six of them: a named account holder with a
+full January 2020 statement, another person's name beside a childcare debit, an unmasked
+account number, and four days of card spending with merchant, town and timestamp, which is a
+location history. Those tokens were replaced by placeholders of the SAME LENGTH, so not one
+byte of structure moved and every dialect under test reads exactly as before.
+
+Nothing else was touched. A fixture that is reformatted stops being evidence of what a bank
+actually sends, which is the only reason to keep it here. `tests/fixtures/REVIEWED.json` records
+the hash of every file as it was read and cleared, and `scripts/validate_corpus.py` fails if any
+of them changes, so the next edit cannot pass unread.
 
 ## The banks
 
