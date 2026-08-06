@@ -4,23 +4,43 @@ build-backend = "hatchling.build"
 
 [project]
 name = "bankfile"
-version = "0.0.1"
+version = "0.1.0"
 description = "One schema for bank files: MT940 and OFX/QFX today, MT942, CAMT.053 and BAI2 next."
 readme = "README.md"
-# The code is MIT. The sdist also carries bank fixtures borrowed from other projects' test
-# suites, which keep their own terms, so the expression names them rather than quietly
-# publishing someone else's BSD material as MIT.
-license = "MIT AND BSD-3-Clause"
-license-files = ["LICENSE", "tests/fixtures/mt940/*/LICENSE"]
+# MIT alone, and only this project's own notice. The borrowed bank fixtures live under
+# tests/fixtures/ and are excluded from every artifact, which the `package` CI job enforces by
+# failing the build if one rides the sdist. So nothing here distributes another project's BSD,
+# MIT or Apache material, and "MIT AND BSD-3-Clause" was telling PyPI otherwise: a downstream
+# licence scanner then chases attribution obligations for material the wheel does not contain.
+# The upstream notices stay in the repository, in a LICENSE file beside the data they cover.
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [{ name = "Dylan Merigaud" }]
 # No camt053, bai2 or iso20022 here until the library reads them. A keyword is a promise made
 # to someone searching PyPI, and the one thing a finance library cannot afford is to overclaim.
 keywords = ["mt940", "ofx", "qfx", "bank", "statement", "reconciliation", "fintech"]
+# Classifiers are how PyPI is filtered, so a missing one costs the readers who search by
+# audience or by supported version rather than by name. Two deliberate absences:
+#   no "License ::" entry, because PEP 639 replaced it with License-Expression above and PyPI
+#     rejects a distribution that carries both.
+#   no 3.14, because it sits OUTSIDE the range CI covers. The matrix runs 3.10, 3.12 and 3.13,
+#     so 3.11 is interpolation between two tested points and 3.14 would be extrapolation past
+#     the last one. requires-python permits 3.14 all the same; a classifier is read as a claim
+#     that a version was tried, and that one has not been.
 classifiers = [
   "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
   "Intended Audience :: Financial and Insurance Industry",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Office/Business :: Financial :: Accounting",
+  "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
 ]
 dependencies = [
@@ -37,8 +57,13 @@ dependencies = [
 ]
 
 [project.urls]
+# The four links PyPI renders in its sidebar. Source and Changelog are not decoration for a
+# parser: someone who suspects a wrong amount arrives on the PyPI page first, and what they
+# need from there is the code that produced the figure and the list of changes that moved one.
 Homepage = "https://github.com/DylanMerigaud/bankfile"
+Source = "https://github.com/DylanMerigaud/bankfile"
 Issues = "https://github.com/DylanMerigaud/bankfile/issues"
+Changelog = "https://github.com/DylanMerigaud/bankfile/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 # The MCP server is optional on purpose. Someone importing this library inside their own

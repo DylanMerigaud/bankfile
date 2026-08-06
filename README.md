@@ -40,6 +40,153 @@ described in both formats and fails on any difference outside three named exclus
 `opening_balance`, which OFX 1.x has no element for and which we refuse to compute by
 subtraction. That last difference is pinned by its own test rather than hidden in the list.
 
+## API
+
+The public surface is deliberately small: `parse`, `parse_bytes`, `UnknownFormatError`,
+`__version__`, and the four model types `Statement`, `Transaction`, `ReadWarning`, `Source`.
+Everything else in the package is an implementation detail a caller should never need.
+
+**`parse(path)` returns a `Statement`, not a list of transactions.** The entries are one field
+of it. The account, the balances, the provenance and the import report are the others, and a
+caller who keeps only `.transactions` has thrown away the part that says whether those entries
+can be trusted.
+
+`parse_bytes(data, path=None)` is the same read for content you already hold in memory. It
+takes bytes and never a `str`, because choosing the encoding is the reader's job and it cannot
+do that job once someone else has guessed. Both raise `UnknownFormatError` when the file is
+neither MT940 nor OFX.
+
+`Statement` and `Transaction` mirror `corpus/schema/statement.schema.json` and
+`corpus/schema/transaction.schema.json`, and those schemas are the authority, not this README
+and not the Python classes. They are neutral data so that the TypeScript implementation reads
+the same truth; `tests/test_schema_mirror.py` fails if the classes drift from them. Where a
+schema and this page disagree, the schema is right.
+
+### `Statement`
+
+| field | type | |
+| --- | --- | --- |
+| `source` | `Source` | `format` is `"MT940"` or `"OFX"`, plus `path` and `encoding`. The one part that legitimately differs across formats. |
+| `account` | `str \| None` | The account identifier as the file states it. |
+| `currency` | `str \| None` | ISO 4217, three letters. |
+| `opening_balance` | `Decimal \| None` | Never computed by subtraction. OFX 1.x has no element for it, so it stays null there. |
+| `closing_balance` | `Decimal \| None` | |
+| `transactions` | `list[Transaction]` | |
+| `warnings` | `list[ReadWarning]` | Always present, empty when the read was clean. |
+
+### `Transaction`
+
+| field | type | |
+| --- | --- | --- |
+| `date` | `datetime.date` | The value date, and the only date that is never null. |
+| `amount` | `Decimal` | Signed. Negative is money leaving the account. |
+| `currency` | `str \| None` | ISO 4217, three letters. |
+| `raw` | `dict[str, Any]` | Always filled. The origin format's own fields, untouched. |
+| `booking_date` | `datetime.date \| None` | |
+| `counterparty_name` | `str \| None` | `applicant_name` in MT940, `NAME` in OFX. This single field is most of the reason the library exists. |
+| `counterparty_account` | `str \| None` | |
+| `reference` | `str \| None` | |
+| `purpose` | `str \| None` | |
+| `bank_reference` | `str \| None` | |
+| `type_code` | `str \| None` | The shared vocabulary: `TRANSFER`, `CHECK`, `DIRECT_DEBIT`, `DEPOSIT`, `INTEREST`, `DIVIDEND`, `FEE`, `ATM`, `POINT_OF_SALE`, `CASH`, `PAYMENT`, `CREDIT`, `DEBIT`, `HOLD`, `OTHER`. The mapping is ours and it is arguable, so it is open: an unmapped code becomes `OTHER` with a warning and the original stays in `raw`. |
+| `check_number` | `str \| None` | A string, because leading zeros in a cheque number are significant. |
+
+`ReadWarning` carries `rule`, `field`, `value` and `message`. `Source` carries `format`, `path`
+and `encoding`.
+
+### Money is `Decimal`, never float
+
+`amount`, `opening_balance` and `closing_balance` are `decimal.Decimal`, and the JSON output
+carries them as strings for the same reason.
+
+A cent lost inside a binary64 is a false reconciliation. `0.1 + 0.2` is not `0.3` in floating
+point, so a thousand entries summed as floats can miss the closing balance by a few cents,
+which reads as a real discrepancy and sends somebody hunting for a transaction that does not
+exist. The source file already carries exact decimals: converting them to float destroys
+information that arrived correct.
+
+`Decimal` refuses to mix with float, which is the property you want here:
+
+```python
+from decimal import Decimal
+from bankfile import parse
+
+statement = parse("statement.sta")
+total = sum((t.amount for t in statement.transactions), Decimal("0"))
+
+statement.transactions[0].amount * 1.2  # TypeError, and that is the point
+statement.transactions[0].amount * Decimal("1.2")
+```
+
+### `currency` is nullable, and null means the file did not say
+
+Not "EUR by default", not "guess from the country". A real file leaves `CURDEF` empty
+(ofxparse issue #81, two Australian banks), and the corpus rule for that case is to keep the
+transaction, leave the currency unset and warn. The alternatives are both worse: dropping the
+entry rejects a whole statement over one empty tag, and inferring a currency from the bank
+identifier produces the wrong-but-plausible figure this project exists to avoid.
+
+So `if transaction.currency is None` is a real branch you have to write, and it means the
+information is not in the file.
+
+### `warnings`: nothing unreadable is dropped in silence
+
+A file that can be read is never rejected over the value of a single field. The unexpected
+value is kept verbatim, the normalised field stays null, and a warning says so. That is the
+whole point of the array: a tolerant parser without it is just a parser that loses data
+quietly.
+
+`rule` names the section of [`corpus/reading-rules.md`](corpus/reading-rules.md) that fired, so
+a line in the output leads straight to the paragraph that decided it. There are five:
+
+| rule | fires on |
+| --- | --- |
+| `encoding` | Which codec was finally used, and when the file asked for one we do not honour. |
+| `header` | An OFX 1.x header block we could not read, so the format defaults were applied. |
+| `amount` | An amount whose decimal separator was ambiguous, and the reconciliation check below. |
+| `date` | A date absent, all zeros, or of a length the format does not define. |
+| `tag` | An unknown tag, an empty tag, or a value outside an enumeration such as an unmapped transaction code. |
+
+Identical warnings are collapsed to one. Measured on the real MT940 files in the test corpus,
+77 of 211 transactions carry a SWIFT code outside the mapped vocabulary, and 77 identical
+lines is a report nobody reads.
+
+### `raw` always keeps the origin format
+
+`transaction.raw` holds the source format's own fields as they were. A normalisation that
+throws the original away forces a re-parse of the file the first time a question falls outside
+the schema, and by then nobody has the file any more.
+
+```python
+transaction.type_code  # 'TRANSFER', ours
+transaction.raw["id"]  # 'NTRF', the file's
+```
+
+### The reconciliation check
+
+No other parser does this. When the file states both balances, opening plus the sum of the
+entries is checked against the closing balance, and a mismatch becomes a warning:
+
+```text
+amount | 62F | -49.06
+this statement does not add up: opening 0.00 plus -45.59 of entries gives -45.59, and the
+file states a closing balance of 3.47, a difference of -49.06. The entries are returned
+unchanged, the arithmetic is the file's.
+```
+
+That is a real fixture, not an invented example. The check earns its place because it found
+the only genuine bug of this phase: `mt940` negates an amount for a `D` mark and not for an
+`RC`, a reversed credit, so money leaving the account came back positive. No test caught it.
+Arithmetic did, in one line.
+
+Run across the real files of the test corpus it reports 13 that do not add up, all 13
+verified by hand against a byte level sum that does not go through this library, and in every
+case it is the file that contradicts itself, not our reading of it. Which is the point:
+somebody reconciling an account needs to be told the file they were sent does not balance.
+
+Today this fires on MT940 only, because OFX 1.x carries no opening balance and we will not
+compute one by subtraction.
+
 ## Why this exists, and what it is not
 
 Every format has its library, and every library has its schema. Measured on 2026-08-05: for the

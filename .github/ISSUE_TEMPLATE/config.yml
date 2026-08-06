@@ -1,1 +1,12 @@
 blank_issues_enabled: true
+
+# These two sit on the issue chooser, in front of the New issue button, because both are
+# things that must NOT be typed into a public issue box. By the time a real statement or a
+# reproduction of a wrong amount has been posted publicly, the data is already out.
+contact_links:
+  - name: A file in this repository still contains real personal data
+    url: https://github.com/DylanMerigaud/bankfile/security/advisories/new
+    about: Report it privately, never in a public issue. An unanonymised corpus file is treated as a vulnerability here, and it is the most useful report this project can receive.
+  - name: The library returns a wrong amount and reports no error
+    url: https://github.com/DylanMerigaud/bankfile/security/advisories/new
+    about: A plausible but wrong figure enters a reconciliation unnoticed, so it is handled as a vulnerability rather than a bug. Report it privately first.

@@ -200,6 +200,45 @@ async def test_the_import_report_is_paginated_like_everything_else(server: Any) 
 
 
 @pytest.mark.anyio
+async def test_the_import_report_is_capped_the_same_way_the_entries_are(tmp_path: Path) -> None:
+    """The cap on the report was enforced and never tested, so nothing stopped it being lost.
+
+    A broken file carries MORE warnings than entries, one per thing that could not be read, so
+    the report is the surface most likely to fill a context window, not the least. Served rather
+    than refused, capped rather than obeyed, `next_offset` to continue: the same contract as
+    `list_transactions`, and it cannot rest on the client respecting the schema either.
+    """
+    generated = tmp_path / "noisy.ofx"
+    codes = 150
+    entries = "".join(
+        f"<STMTTRN>\n<TRNTYPE>Z{index:04d}\n<DTPOSTED>20260115\n<TRNAMT>-1.00\n"
+        f"<FITID>T{index:04d}\n</STMTTRN>\n"
+        for index in range(codes)
+    )
+    generated.write_text(
+        "OFXHEADER:100\nDATA:OFXSGML\nVERSION:102\nSECURITY:NONE\nENCODING:USASCII\n"
+        "CHARSET:1252\nCOMPRESSION:NONE\nOLDFILEUID:NONE\nNEWFILEUID:NONE\n\n<OFX>\n"
+        "<BANKMSGSRSV1>\n<STMTTRNRS>\n<STMTRS>\n<CURDEF>EUR\n<BANKACCTFROM>\n<ACCTID>1111\n"
+        "</BANKACCTFROM>\n<BANKTRANLIST>\n" + entries + "</BANKTRANLIST>\n</STMTRS>\n"
+        "</STMTTRNRS>\n</BANKMSGSRSV1>\n</OFX>\n",
+        encoding="utf-8",
+    )
+    server = build_server(tmp_path)
+    # Each entry carries a transaction code nothing maps, and each code is different, so the
+    # warnings survive the collapse that folds identical ones into one line.
+    report = await call(server, "list_warnings", path="noisy.ofx", limit=5000)
+    assert report["ok"] is True
+    assert report["total"] == codes
+    assert len(report["warnings"]) == MAX_LIMIT
+    assert report["next_offset"] == MAX_LIMIT
+
+    rest = await call(server, "list_warnings", path="noisy.ofx", offset=MAX_LIMIT, limit=5000)
+    assert len(rest["warnings"]) == codes - MAX_LIMIT
+    assert rest["next_offset"] is None
+    assert rest["warnings"][0] != report["warnings"][0], "pages must not repeat the same warning"
+
+
+@pytest.mark.anyio
 async def test_a_clean_file_reports_nothing(server: Any) -> None:
     report = await call(server, "list_warnings", path=PAIRED_OFX)
     assert report["ok"] is True

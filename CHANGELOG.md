@@ -9,9 +9,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 [semantic](https://semver.org/spec/v2.0.0.html), where a **breaking** change includes any change
 to a normalised value that a caller could already have been relying on.
 
-## [Unreleased]
+## [0.1.0] - 2026-08-06
 
-Nothing released yet. Everything below is what the first release will contain.
+First release. Reads MT940 and OFX/QFX; MT942, CAMT.053 and BAI2 are not written yet.
 
 ### Added
 
@@ -27,6 +27,16 @@ Nothing released yet. Everything below is what the first release will contain.
 - A reconciliation check. If opening plus the entries does not make the closing balance, the
   report says so with the difference. No other parser tells you that your file contradicts
   itself.
+
+### Decided, and worth knowing before you depend on it
+
+- `date` is the date the statement line carries, and the field to sort and reconcile by. Its
+  provenance differs by format and the schema now says so: MT940 `:61:` value date, OFX
+  `DTPOSTED`. It was documented as "value date", which is wrong for OFX.
+- `booking_date` only ever holds a date the BANK set: MT940 entry date, OFX `DTAVAIL`. It used
+  to fall back to OFX `DTUSER`, which is the date the CUSTOMER initiated the transaction and
+  can precede the posting by weeks. A date whose meaning is not recorded is a plausible wrong
+  answer, so it is gone from that fallback and stays available in `raw`.
 
 ### Fixed before the first release
 

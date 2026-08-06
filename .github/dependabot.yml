@@ -1,0 +1,34 @@
+version: 2
+
+# WHY a parser needs this more than most projects: the numbers this library returns are partly
+# produced by mt-940, so a silent drift in that dependency is a silent change in somebody's
+# reconciliation. CI already pins the BOTTOM of the range (the `floor` job installs
+# mt-940==5.0.0 exactly). Nothing moved the TOP: uv.lock is what CI resolves, so without this
+# file the suite would keep testing whatever version was current the week the lock was written,
+# and the first person to hit a newer mt-940 would be a user, not the test corpus.
+#
+# The verdict on each of these pull requests is the corpus. A bump that changes how a real bank
+# file reads turns a green CI red, which is the whole point of keeping 54 real statements.
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # NOT grouped with the rest. mt-940, mcp and pydantic each get their own pull request, so
+    # that when the suite breaks, the diff names the culprit instead of offering five.
+    open-pull-requests-limit: 5
+    groups:
+      # The toolchain, on the other hand, is grouped: ruff and mypy find new faults on every
+      # release and that noise belongs in one pull request, not five.
+      dev-tools:
+        patterns: ["ruff", "mypy", "pytest", "pytest-cov"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # release.yml holds the trusted-publishing step that uploads to PyPI. An action left on a
+    # stale major there is a supply chain hole with the right to publish this package.
+    groups:
+      actions:
+        patterns: ["*"]

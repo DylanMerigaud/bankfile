@@ -39,6 +39,38 @@ def _first(node: Node, tags: tuple[str, ...]) -> Node | None:
     return None
 
 
+def _statements(root: Node) -> list[Node]:
+    """Every statement aggregate, in the order the DOCUMENT writes them.
+
+    The order is the whole point, and one walk gives both things that depend on it.
+
+    We return the FIRST, and the warning below promises the caller exactly that, so "first" has
+    to mean first in the file. Asking `find_all` for STMTRS and then for CCSTMTRS answers with
+    every bank statement before every credit card one, so a file that opens on a card statement
+    and carries a current account further down would be read as the current account while being
+    reported as the first: a plausible set of figures under the wrong account, which is the
+    failure this library exists to prevent.
+
+    The walk is depth first and yields a statement BEFORE anything nested inside it, which is
+    what keeps the first one outermost. A statement nested in another is the second half of a
+    file whose `</STMTRS>` was omitted, and reading that inner one as the file's first statement
+    would put one account's money under another's number and currency.
+
+    Nested ones are still counted, because the count is what decides the warning. Leaving them
+    out would drop a statement in SILENCE, which the reading rules call worse than a crash.
+    """
+    found: list[Node] = []
+    # Iterative, like the walk in sgml.py and for the same reason: a corrupt file nests as deep
+    # as it likes, and a lookup that answers RecursionError is a lookup that failed.
+    stack = list(reversed(root.children))
+    while stack:
+        node = stack.pop()
+        if node.tag in STATEMENT_BOUNDARY:
+            found.append(node)
+        stack.extend(reversed(node.children))
+    return found
+
+
 def _text(node: Node, *tags: str) -> str | None:
     """First non-empty value among several spellings of the same field.
 
@@ -140,7 +172,12 @@ def _read_transaction(
         return None
 
     booking_date = None
-    booking_raw = _text(node, "DTAVAIL", "DTUSER")
+    # DTAVAIL only. DTUSER was in this fallback and it does not belong: it is the date the
+    # CUSTOMER initiated the transaction, when the cheque was written or the transfer
+    # scheduled, which can precede the posting by weeks. Putting it here produced a plausible
+    # date whose meaning nothing recorded, the exact output the reading rules forbid. Nothing
+    # is lost: `raw` keeps DTUSER for any caller who wants it.
+    booking_raw = _text(node, "DTAVAIL")
     if booking_raw:
         booking_date, booking_warnings = parse_date(booking_raw, field="DTAVAIL")
         warnings.extend(booking_warnings)
@@ -186,19 +223,10 @@ def read_ofx(data: bytes, *, path: str | None = None) -> Statement:
     root, tag_warnings = parse_tags(header.body)
     warnings: list[ReadWarning] = [*header.warnings, *tag_warnings]
 
-    # Counted twice on purpose, and the difference matters.
-    #
-    # `present` counts EVERY statement aggregate in the document, nested ones included. `usable`
-    # keeps only the outermost, because a statement nested inside another is the second half of
-    # a file whose `</STMTRS>` was omitted, and merging it would put one account's money under
-    # another account's number and currency.
-    #
-    # Using `usable` alone would then drop that second account in SILENCE, which is the failure
-    # this project calls worse than a crash. So the count that decides the warning is `present`.
-    present = [node for tag in STATEMENT_TAGS for node in root.find_all(tag)]
-    statements = [
-        node for tag in STATEMENT_TAGS for node in root.find_all(tag, stop_at=STATEMENT_BOUNDARY)
-    ]
+    # Found in document order, and both uses below depend on that: the one we read is the first
+    # of the file, and the count that decides the warning includes the nested ones, so no
+    # statement is ever left out of the report in silence. See _statements.
+    statements = _statements(root)
     if not statements:
         return Statement(
             source=Source(format="OFX", path=path, encoding=header.encoding),
@@ -217,16 +245,16 @@ def read_ofx(data: bytes, *, path: str | None = None) -> Statement:
                 ]
             ),
         )
-    if len(present) > 1:
+    if len(statements) > 1:
         # Phase 1 reads one statement per file. Saying so is better than quietly returning the
         # first of several and letting a caller reconcile a third of an account.
         warnings.append(
             ReadWarning(
                 rule="tag",
                 field="STMTRS",
-                value=str(len(present)),
+                value=str(len(statements)),
                 message=(
-                    f"{len(present)} statements in this file, only the first is returned. "
+                    f"{len(statements)} statements in this file, only the first is returned. "
                     f"Multi statement files are not handled yet."
                 ),
             )

@@ -15,14 +15,15 @@
     "date": {
       "type": "string",
       "format": "date",
-      "description": "Value date."
+      "description": "The date the statement line itself carries, and the one to sort and reconcile by. Its provenance differs by format and saying so is more honest than pretending otherwise: MT940 field :61: value date, OFX DTPOSTED. Calling it the value date, as this schema did before 0.1.0, was wrong for OFX, where DTPOSTED is the posting date and the closest thing to a value date is DTAVAIL, which most files omit."
     },
     "booking_date": {
       "type": [
         "string",
         "null"
       ],
-      "format": "date"
+      "format": "date",
+      "description": "A second date, when the format supplies one the BANK set: MT940 entry date, OFX DTAVAIL (funds availability). Null otherwise. It never holds a date the customer set, such as OFX DTUSER, which lives in `raw`: a date whose meaning is not recorded is a plausible wrong answer."
     },
     "amount": {
       "type": "string",

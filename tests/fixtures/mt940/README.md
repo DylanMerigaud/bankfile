@@ -38,10 +38,25 @@ checked and starts being decoration.
 
 ## Copyright
 
-The corpus is redistributed under the BSD 3-Clause licence of `wolph/mt940`. Three of the
-directories were themselves imported by that project from other parsers, and carry their own
-notice in a `LICENSE` file next to the data: `betterplace/` (Apache 2.0),
-`cmxl/` (MIT, Michael Bumann), `jejik/` (MIT, Frank Oxener, Agile Dovadi BV).
+Most of this corpus is redistributed under the BSD 3-Clause licence of `wolph/mt940`, copyright
+Rick van Hattem, reproduced in full below. Three directories reached that project from
+elsewhere and are NOT his: each keeps its own terms and its own holder, in a `LICENSE` file
+beside its data. Naming two of the three and leaving the third as a bare licence name, which is
+what this section used to do, drops a copyright holder from the only notice a reader gets.
+
+| directory | licence | copyright holder |
+|---|---|---|
+| `betterplace/` | Apache 2.0 | betterplace, 2010 |
+| `cmxl/` | MIT | Michael Bumann, 2014 |
+| `jejik/` | MIT | Frank Oxener, Agile Dovadi BV, 2012 |
+
+These are MODIFIED copies, and saying so is not politeness: the Apache 2.0 licence covering
+`betterplace/` requires a changed file to carry a notice that it was changed. That notice is
+the paragraph above beginning "These files were edited in exactly one way", which gives the
+date, what was replaced in the six files concerned, and why. It covers every directory here.
+
+`{organization}` in the block below is upstream's own unfilled placeholder in the `wolph/mt940`
+LICENSE. It is reproduced as it stands, like the rest of the text.
 
 ```
 Copyright (c) 2014, Rick van Hattem
