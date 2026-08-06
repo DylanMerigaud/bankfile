@@ -3,7 +3,7 @@ name: release
 # Publishes to PyPI when a version tag is pushed.
 # Trusted publishing (OIDC): no PYPI_TOKEN secret. Configure once on pypi.org
 # (project -> Publishing -> Trusted publisher: GitHub Actions, repo DylanMerigaud/bankfile,
-# workflow release.yml). Same pattern as fintech-roast on the npm side.
+# workflow release.yml).
 on:
   push:
     tags: ["v*"]

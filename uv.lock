@@ -91,6 +91,7 @@ dependencies = [
 [package.optional-dependencies]
 mcp = [
     { name = "mcp" },
+    { name = "pydantic" },
 ]
 
 [package.dev-dependencies]
@@ -106,6 +107,7 @@ dev = [
 requires-dist = [
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=2.0" },
     { name = "mt-940", specifier = ">=5.0" },
+    { name = "pydantic", marker = "extra == 'mcp'", specifier = ">=2" },
 ]
 
 [package.metadata.requires-dev]

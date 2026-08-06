@@ -44,7 +44,10 @@ Issues = "https://github.com/DylanMerigaud/bankfile/issues"
 # The MCP server is optional on purpose. Someone importing this library inside their own
 # pipeline has no reason to pull a server framework, and the core must stay installable in the
 # old stacks a bank format parser lives in.
-mcp = ["mcp>=2.0"]
+# pydantic is declared even though `mcp` already pulls it in. The server imports it directly,
+# so relying on somebody else's transitive dependency means the day mcp drops or swaps it, this
+# package breaks for a reason nothing here explains.
+mcp = ["mcp>=2.0", "pydantic>=2"]
 
 [project.scripts]
 bankfile = "bankfile.cli:main"
