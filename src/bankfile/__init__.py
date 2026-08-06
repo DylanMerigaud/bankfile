@@ -7,6 +7,7 @@ Everything else in this package is an implementation detail a caller should neve
 
 from __future__ import annotations
 
+from importlib.metadata import version
 from pathlib import Path
 
 from bankfile.detect import UnknownFormatError, detect
@@ -14,12 +15,15 @@ from bankfile.model import ReadWarning, Source, Statement, Transaction
 from bankfile.mt940_adapter import read_mt940
 from bankfile.ofx.reader import read_ofx
 
+__version__ = version("bankfile")
+
 __all__ = [
     "ReadWarning",
     "Source",
     "Statement",
     "Transaction",
     "UnknownFormatError",
+    "__version__",
     "parse",
     "parse_bytes",
 ]

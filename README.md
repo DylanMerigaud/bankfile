@@ -130,8 +130,10 @@ entries with filters, `list_warnings` for the import report.
 The tools return filtered and paginated slices, never the whole file: a statement with 5000
 transactions destroys a context window, and that is the first thing a naive wrapper gets wrong.
 `read_statement` has no field a transaction could go in, which is cheaper than promising it
-will not send one. `--root` is a real restriction: the server takes a path from a model and
-opens it, so without one the model can walk your filesystem.
+will not send one. `--root` is a real restriction: the server takes a path from a model and opens it, so the root
+is what stops the model wandering. Omitting the flag does not remove the restriction, it sets
+it to the working directory, which is a sensible default and rarely the one you want for
+statements.
 
 A failure returns a structured error and leaves every number null. It never fills a hole with a
 figure, and every tool description carries that contract, because a model that does not know it

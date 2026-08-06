@@ -117,7 +117,9 @@ warn_unreachable = true
 files = ["src", "tests"]
 
 [tool.pytest.ini_options]
-addopts = "-q --cov=bankfile --cov-report=term-missing --cov-fail-under=85"
+# 95 and not 85. The gate sat twelve points below the actual figure, which means roughly 140
+# tests could have been deleted with CI still green: a gate nothing can trip is decoration.
+addopts = "-q --cov=bankfile --cov-report=term-missing --cov-fail-under=95"
 testpaths = ["tests"]
 
 [tool.hatch.build.targets.sdist]

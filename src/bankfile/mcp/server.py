@@ -26,6 +26,7 @@ import datetime
 import sys
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated
 
@@ -173,7 +174,10 @@ def build_server(root: Path) -> MCPServer:
 
     mcp = MCPServer(
         name="bankfile",
-        version="0.0.1",
+        # Read from the installed metadata, never retyped. A literal here would drift from
+        # pyproject.toml the first time somebody bumps one and not the other, and the release
+        # workflow now refuses a tag that disagrees with the packaged version.
+        version=version("bankfile"),
         instructions=(
             "Read bank statement files (MT940, OFX, QFX) into one normalised schema.\n\n"
             "Everything runs on this machine and nothing is uploaded: a bank statement is the "
@@ -199,9 +203,12 @@ def build_server(root: Path) -> MCPServer:
         except (OSError, ValueError) as exc:
             return None, Error(kind="unreadable_path", message=str(exc), path=path)
         if resolved_root not in candidate.parents and candidate != resolved_root:
+            # The absolute root is deliberately NOT in this message. It goes to a model, and
+            # the server's own filesystem layout is not something a model needs in order to
+            # correct a path. The root is announced once, in the server instructions.
             return None, Error(
                 kind="outside_root",
-                message=f"this server only reads under {resolved_root}",
+                message="this path is outside the directory this server may read",
                 path=path,
             )
         if not readable:
