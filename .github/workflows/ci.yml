@@ -20,9 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # Le socle des distributions encore soutenues. Un parseur de format bancaire vit dans
-        # des piles anciennes: casser 3.10 pour une syntaxe recente couterait plus d'adoption
-        # que la syntaxe n'en fait gagner.
+        # The base of the distributions still supported. A bank format parser lives inside
+        # old stacks: breaking 3.10 for recent syntax would cost more adoption than the
+        # syntax gains.
         python: ["3.10", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
@@ -31,8 +31,8 @@ jobs:
       - run: uv run --python ${{ matrix.python }} pytest
 
   corpus:
-    # Le corpus est l'ACTIF du projet, pas le code: le code se regenere, les deviations reelles
-    # des banques ne s'inventent pas. Il est donc valide au meme titre que les tests.
+    # The corpus is the ASSET of the project, not the code: code can be regenerated, the real
+    # deviations of banks cannot be invented. So it is validated just like the tests.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,3 +40,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: python3 scripts/validate_corpus.py
+      # A fixture is worth something because its diff against the shared template IS the
+      # deviation. Edited by hand it drifts, the diff stops saying anything, and the note
+      # beside it starts describing a file that no longer exists.
+      - run: python3 scripts/build_fixtures.py --check
