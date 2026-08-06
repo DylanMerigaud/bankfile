@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Annotated
 
 from mcp.server import MCPServer
+from mcp.types import ToolAnnotations
 from pydantic import BaseModel, Field
 
 from bankfile import parse
@@ -52,6 +53,26 @@ estimate it."""
 # lets a caller ask for 5000 rows has no pagination, it has a suggestion.
 DEFAULT_LIMIT = 25
 MAX_LIMIT = 100
+
+
+def _read_only(title: str) -> ToolAnnotations:
+    """Every tool here only reads a local file, and the client needs to be TOLD that.
+
+    Without these hints a client treats each call as a potentially destructive action and asks
+    the user to approve it. On a statement of 5000 entries that is twenty approval prompts to
+    page through one account, which is how a well built server ends up unused. With them,
+    Claude Code and Claude Desktop auto-approve read-only calls.
+
+    `open_world_hint=False` is the other half of the promise this server makes: it reaches
+    nothing outside the machine, so there is no network for a prompt to protect you from.
+    """
+    return ToolAnnotations(
+        title=title,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=False,
+    )
 
 
 class Error(BaseModel):
@@ -193,11 +214,12 @@ def build_server(root: Path) -> MCPServer:
             return None, Error(kind="read_failed", message=str(exc), path=path)
 
     @mcp.tool(
+        annotations=_read_only("Summarise a bank file"),
         description=(
             "Summarise a bank file: account, currency, balances, how many entries it holds and "
             "whether its own figures add up. It does NOT return the entries; use "
             "list_transactions for those." + CONTRACT
-        )
+        ),
     )
     def read_statement(
         path: Annotated[str, Field(description="Path to the file, relative to the server root.")],
@@ -230,13 +252,14 @@ def build_server(root: Path) -> MCPServer:
         )
 
     @mcp.tool(
+        annotations=_read_only("Page through the entries of a bank file"),
         description=(
             "Page through the entries of a bank file, with filters. Never returns the whole "
             f"file: at most {MAX_LIMIT} entries per call, {DEFAULT_LIMIT} by default. Use "
             "`total_matching` to see how many matched and `next_offset` to continue. Filter "
             "first, page second: asking for everything and reading it all is what fills a "
             "context window." + CONTRACT
-        )
+        ),
     )
     def list_transactions(
         path: Annotated[str, Field(description="Path to the file, relative to the server root.")],
@@ -303,12 +326,13 @@ def build_server(root: Path) -> MCPServer:
         )
 
     @mcp.tool(
+        annotations=_read_only("What could not be read"),
         description=(
             "The import report: everything in the file that could not be read, and everything "
             "that was ambiguous. An empty report means a clean read. This is where a silently "
             "dropped field shows up, which is the failure mode that costs the most: a crash is "
             "obvious, a missing cheque number is not." + CONTRACT
-        )
+        ),
     )
     def list_warnings(
         path: Annotated[str, Field(description="Path to the file, relative to the server root.")],

@@ -225,3 +225,21 @@ def test_a_root_that_is_not_a_directory_fails_before_any_transport_opens(
     not_a_directory.write_text(":20:X\n", encoding="utf-8")
     assert main(["--root", str(not_a_directory)]) == 2
     assert "not a directory" in capsys.readouterr().err
+
+
+@pytest.mark.anyio
+async def test_every_tool_is_annotated_read_only_and_closed_world(server: Any) -> None:
+    """Annotations are what stop a client asking the user to approve every single call.
+
+    Without them, paging through one account is twenty approval prompts, and a server nobody
+    wants to click through is a server nobody uses. `open_world_hint=False` states the other
+    half of the promise: nothing here reaches off the machine.
+    """
+    for tool in await server.list_tools():
+        annotations = tool.annotations
+        assert annotations is not None, tool.name
+        assert annotations.read_only_hint is True, tool.name
+        assert annotations.destructive_hint is False, tool.name
+        assert annotations.idempotent_hint is True, tool.name
+        assert annotations.open_world_hint is False, tool.name
+        assert annotations.title, tool.name

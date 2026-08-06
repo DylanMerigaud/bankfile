@@ -82,18 +82,43 @@ Never on the parsing path. On three points, offline, where there is no specifica
 
 Local, over stdio. The file does not leave the machine.
 
+### Point it at your statements
+
+Nothing is uploaded and nothing is installed permanently if you do not want it to be. `--root`
+is the directory the server may read under; it is a real restriction, not decoration, because
+the server takes a path from a model and opens it.
+
+**Claude Code**
+
 ```bash
-pip install "bankfile[mcp]"
-bankfile-mcp --root ~/statements
+claude mcp add bankfile -- uvx --from "bankfile[mcp]" bankfile-mcp --root ~/statements
 ```
+
+**Claude Desktop**, in `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "bankfile": { "command": "bankfile-mcp", "args": ["--root", "/home/you/statements"] }
+    "bankfile": {
+      "command": "uvx",
+      "args": ["--from", "bankfile[mcp]", "bankfile-mcp", "--root", "/Users/you/statements"]
+    }
   }
 }
 ```
+
+**Codex**, in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.bankfile]
+command = "uvx"
+args = ["--from", "bankfile[mcp]", "bankfile-mcp", "--root", "/Users/you/statements"]
+```
+
+**Cursor**, in `~/.cursor/mcp.json`: same shape as Claude Desktop above.
+
+`uvx` runs it without installing anything into your environment. If you would rather install it,
+`pip install "bankfile[mcp]"` and use `bankfile-mcp` as the command instead.
 
 Three tools: `read_statement` for what a file holds, `list_transactions` to page through the
 entries with filters, `list_warnings` for the import report.
@@ -107,6 +132,10 @@ opens it, so without one the model can walk your filesystem.
 A failure returns a structured error and leaves every number null. It never fills a hole with a
 figure, and every tool description carries that contract, because a model that does not know it
 is talking to a grammar will hedge and estimate what it was already given exactly.
+
+All three tools are annotated read-only and closed-world, so clients that honour annotations
+stop asking you to approve every call. Paging through one account is otherwise twenty approval
+prompts, which is how a working server ends up unused.
 
 ## Contributing
 
