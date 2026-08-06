@@ -535,3 +535,17 @@ def test_an_unstructured_86_field_is_not_touched_by_the_repair() -> None:
     transaction = read_mt940(block).transactions[0]
 
     assert transaction.counterparty_name is None
+
+
+def test_a_domestic_account_number_splits_as_cleanly_as_an_iban() -> None:
+    """The repair reads `?31` off the raw tag, so it does not depend on the value looking like
+    an IBAN. Nine `?31` values in the corpus are plain Kontonummern, and a splitter that
+    validated IBAN checksums instead would leave every one of them glued to a name."""
+    block = SUBFIELD_31_BLOCK.replace(
+        b"?31DE14508800500194785000?32KARL KAUFMANN", b"?310175526300?32PAYPAL"
+    )
+
+    transaction = read_mt940(block).transactions[0]
+
+    assert transaction.counterparty_name == "PAYPAL"
+    assert transaction.counterparty_account == "0175526300"
