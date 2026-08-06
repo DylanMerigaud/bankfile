@@ -62,9 +62,11 @@ absent, an unknown transaction code becomes OTHER with a warning, and the encodi
 from __future__ import annotations
 
 import calendar
+import contextlib
 import datetime
+import logging
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from decimal import Decimal
 from typing import Any
 
@@ -243,16 +245,52 @@ def _decode_legacy(data: bytes) -> tuple[str, str, list[ReadWarning]]:
     )
 
 
+@contextlib.contextmanager
+def _without_upstream_logging() -> Iterator[None]:
+    """Keep the upstream library's diagnostics out of the caller's log.
+
+    `mt940.tags` calls `logger.error('matching id=%s (len=%d) "%s" against ...', ..., value)`
+    when a `:61:` line does not match, with the raw statement line as an argument. At ERROR
+    level and with no handler configured, Python's last-resort handler prints it, so simply
+    calling `parse()` on a real file writes counterparty names to stderr. Measured: 3737 bytes
+    and eight fragments of statement content from one file, through the public API.
+
+    That is not a crash and it is not visible in the returned object, which is why it survived
+    an audit: the finding was raised, tested against a file whose lines happened to match, and
+    wrongly recorded as not reproducing.
+
+    Scoped and restored, never disabled globally: a caller who wants the upstream diagnostics
+    can still turn them on around their own call.
+    """
+    # The level, not `disabled`, and a handler, not propagation. The call comes from the CHILD
+    # logger `mt940.tags`, so disabling the parent changes nothing: `disabled` is per logger.
+    # Raising the PARENT's level does work, because a child at NOTSET inherits its effective
+    # level. The NullHandler is the second half: without any handler in the chain, logging
+    # falls back to `lastResort`, which prints to stderr on its own.
+    upstream = logging.getLogger("mt940")
+    was_level = upstream.level
+    muzzle = logging.NullHandler()
+    upstream.setLevel(logging.CRITICAL + 1)
+    upstream.addHandler(muzzle)
+    try:
+        yield
+    finally:
+        upstream.setLevel(was_level)
+        upstream.removeHandler(muzzle)
+
+
 def _parse(text: str) -> tuple[list[Transactions], list[ReadWarning]]:
     """Parse every statement block, with the dialect that loses the fewest of them."""
     blocks = _split(text)
-    parsed, failures = _attempt(blocks, None)
+    with _without_upstream_logging():
+        parsed, failures = _attempt(blocks, None)
     dialect: str | None = None
 
     for name, tags in _VARIANTS:
         if not failures:
             break
-        good, bad = _attempt(blocks, tags)
+        with _without_upstream_logging():
+            good, bad = _attempt(blocks, tags)
         if len(bad) < len(failures):
             parsed, failures, dialect = good, bad, name
 

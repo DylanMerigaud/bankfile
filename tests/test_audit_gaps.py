@@ -22,6 +22,7 @@ from bankfile.report import check_reconciliation
 
 REPO = Path(__file__).resolve().parent.parent
 CORPUS = REPO / "corpus" / "banks"
+FIXTURES_MT940 = REPO / "tests" / "fixtures" / "mt940"
 
 HEADER = (
     "OFXHEADER:100\nDATA:OFXSGML\nVERSION:102\nSECURITY:NONE\nENCODING:USASCII\n"
@@ -157,3 +158,29 @@ async def test_no_path_a_model_can_type_ever_crashes_the_tool(path: str) -> None
     assert content is not None, f"expected a tool result, got {type(result).__name__}"
     assert content["ok"] is False
     assert content["error"]["kind"] in {"unreadable_path", "outside_root"}
+
+
+def test_reading_a_statement_writes_nothing_to_the_log(
+    capfd: pytest.CaptureFixture[str],
+) -> None:
+    """No statement content may leave through the log, and this one nearly shipped.
+
+    `mt940.tags` calls `logger.error('matching id=%s (len=%d) "%s" ...', ..., value)` when a
+    `:61:` line does not match, with the raw statement line as an argument. With no handler
+    configured, Python's last resort handler prints it, so calling `parse()` on a real file
+    wrote 3737 bytes to stderr including eight fragments of statement content, counterparty
+    names among them, through the public API.
+
+    It survived an audit because the finding was tested against a file whose lines happened to
+    match and recorded as not reproducing. A library whose entire pitch is that the statement
+    never leaves your machine cannot put the payee in your logs.
+    """
+    fixture = FIXTURES_MT940 / "ASNB" / "mt940.txt"
+    read = read_mt940(fixture.read_bytes(), path=str(fixture))
+    captured = capfd.readouterr()
+
+    assert read.transactions, "the file must still be read, this is not a silencing of failures"
+    assert captured.out == ""
+    assert captured.err == ""
+    # What we could not read is still reported, in the returned object where it belongs.
+    assert read.warnings

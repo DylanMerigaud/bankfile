@@ -9,6 +9,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 [semantic](https://semver.org/spec/v2.0.0.html), where a **breaking** change includes any change
 to a normalised value that a caller could already have been relying on.
 
+## [0.1.1] - 2026-08-06
+
+### Fixed
+
+- **Reading a statement no longer writes statement content to your log.** `mt940.tags` logs the
+  raw `:61:` line at ERROR level when it fails to match, and with no handler configured Python's
+  last resort handler prints it, so `parse()` on a real file wrote 3737 bytes to stderr
+  including eight fragments of statement content, counterparty names among them. The upstream
+  logger is now silenced for the duration of our own parse, scoped and restored, never disabled
+  globally. Everything we could not read is still reported, in the returned object where it
+  belongs. A library whose pitch is that the statement never leaves your machine cannot put the
+  payee in your logs.
+
 ## [0.1.0] - 2026-08-06
 
 First release. Reads MT940 and OFX/QFX; MT942, CAMT.053 and BAI2 are not written yet.
