@@ -29,9 +29,13 @@
       "description": "DECIMAL AS A STRING, never a float. A cent lost inside a binary64 is a false reconciliation, and the source format already carries exact decimals."
     },
     "currency": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 3,
-      "maxLength": 3
+      "maxLength": 3,
+      "description": "Nullable, and the corpus is what made it so. A real file (ofxparse issue #81, two Australian banks) carries an EMPTY CURDEF, and the rule for that case says to keep the transaction and leave the currency unset. Dropping the entry instead would reject a whole statement over one empty tag, and guessing a currency from the country or the bank identifier would produce the wrong-but-plausible figure this project exists to avoid."
     },
     "counterparty_name": {
       "type": [

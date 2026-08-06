@@ -57,7 +57,10 @@ class Transaction:
     # file already carries exact decimals: converting them to floating point destroys
     # information that was correct.
     amount: Decimal
-    currency: str
+    # Nullable because a real file leaves CURDEF empty (ofxparse #81, two Australian banks).
+    # The corpus rule for that case is explicit: keep the transaction, leave the currency
+    # unset, warn. Guessing one from the country would be a wrong but plausible figure.
+    currency: str | None
     # ALWAYS filled in. The fields specific to the source format, as they are. A normalisation
     # that throws the original away forces a re-parse of the file as soon as a question falls
     # outside the schema, and by then nobody has the file any more.
@@ -73,7 +76,7 @@ class Transaction:
     check_number: str | None = None
 
     def __post_init__(self) -> None:
-        if len(self.currency) != 3:
+        if self.currency is not None and len(self.currency) != 3:
             msg = f"expected a 3-letter ISO 4217 currency, got {self.currency!r}"
             raise ValueError(msg)
 
