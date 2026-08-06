@@ -77,9 +77,33 @@ Never on the parsing path. On three points, offline, where there is no specifica
 
 ## MCP server
 
-Local, over stdio. The file does not leave the machine. The tools return filtered and paginated
-slices, never the whole file: a statement with 5000 transactions destroys a context window, and
-that is the first thing a naive wrapper gets wrong.
+Local, over stdio. The file does not leave the machine.
+
+```bash
+pip install "bankfile[mcp]"
+bankfile-mcp --root ~/statements
+```
+
+```json
+{
+  "mcpServers": {
+    "bankfile": { "command": "bankfile-mcp", "args": ["--root", "/home/you/statements"] }
+  }
+}
+```
+
+Three tools: `read_statement` for what a file holds, `list_transactions` to page through the
+entries with filters, `list_warnings` for the import report.
+
+The tools return filtered and paginated slices, never the whole file: a statement with 5000
+transactions destroys a context window, and that is the first thing a naive wrapper gets wrong.
+`read_statement` has no field a transaction could go in, which is cheaper than promising it
+will not send one. `--root` is a real restriction: the server takes a path from a model and
+opens it, so without one the model can walk your filesystem.
+
+A failure returns a structured error and leaves every number null. It never fills a hole with a
+figure, and every tool description carries that contract, because a model that does not know it
+is talking to a grammar will hedge and estimate what it was already given exactly.
 
 ## Contributing
 

@@ -30,11 +30,19 @@ dependencies = [
 Homepage = "https://github.com/DylanMerigaud/bankfile"
 Issues = "https://github.com/DylanMerigaud/bankfile/issues"
 
+[project.optional-dependencies]
+# The MCP server is optional on purpose. Someone importing this library inside their own
+# pipeline has no reason to pull a server framework, and the core must stay installable in the
+# old stacks a bank format parser lives in.
+mcp = ["mcp>=2.0"]
+
 [project.scripts]
 bankfile = "bankfile.cli:main"
+bankfile-mcp = "bankfile.mcp.server:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-cov>=5", "mypy>=1.11", "ruff>=0.6"]
+# mcp is in the dev group as well so that ruff and mypy actually check the server.
+dev = ["pytest>=8", "pytest-cov>=5", "mypy>=1.11", "ruff>=0.6", "mcp>=2.0"]
 
 [tool.ruff]
 line-length = 100
@@ -74,6 +82,13 @@ ignore = [
 # The CLI and the verification scripts write to standard output, that is their function.
 # A SCOPE exemption, not a comfort one: it names two paths, it does not switch off the rule.
 "src/bankfile/cli.py" = ["T20"]
+# The MCP server has a console entry point too, and its argument parsing reports to stderr
+# before any transport exists to report through. Same reason as the CLI, same narrow scope.
+#
+# PLR0913: list_transactions takes nine parameters and that is the design. An MCP tool's
+# parameters ARE its schema, which is the only thing a model sees; folding the filters into a
+# nested object would hide them from the model and make the tool harder to call, not easier.
+"src/bankfile/mcp/server.py" = ["T20", "PLR0913"]
 "scripts/**" = ["T20"]
 # measure_parsers.py imports ofxparse and ofxtools INSIDE its functions on purpose. Neither is
 # a dependency of this package, and neither should ever become one: nothing here may pull in an
