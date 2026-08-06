@@ -475,3 +475,63 @@ def test_the_source_carries_the_path_it_was_given_and_nothing_else() -> None:
     result = read_mt940(b":20:X\n:25:11111111\n:60F:C110101EUR1,00\n")
 
     assert result.source.path is None
+
+
+# The `?31` subfield: `mt-940` 5.0.0 folds it into the counterparty NAME (see the module
+# docstring of `bankfile.mt940_adapter`). These read the expectation off the FILE, as the rest of
+# this module does: the `:86:` says `?31<account>?32<name>`, so those are two different fields.
+
+SUBFIELD_31_BLOCK = (
+    b":20:REF\n"
+    b":25:11111111\n"
+    b":60F:C110101EUR0,00\n"
+    b":61:1101010101C10,00NTRFNONREF\n"
+    b":86:166?00GUTSCHRIFT?100399?20EREF+X?30DRESDEFF508"
+    b"?31DE14508800500194785000?32KARL KAUFMANN\n"
+)
+
+
+def test_the_counterparty_account_does_not_end_up_inside_the_counterparty_name() -> None:
+    """`?31` is the Kontonummer and `?32` the name, so they land in different fields.
+
+    Without the repair this returns `DE14508800500194785000KARL KAUFMANN` as the name and the
+    BIC as the account: two wrong but plausible values on the field a reconciliation matches a
+    payer by.
+    """
+    transaction = read_mt940(SUBFIELD_31_BLOCK).transactions[0]
+
+    assert transaction.counterparty_name == "KARL KAUFMANN"
+    assert transaction.counterparty_account == "DE14508800500194785000"
+
+
+def test_the_repair_leaves_no_private_key_behind_in_raw() -> None:
+    """`raw` is the audit trail of what the file said. A key this module invented to carry a
+    value between two processors is not something the file said."""
+    transaction = read_mt940(SUBFIELD_31_BLOCK).transactions[0]
+
+    assert not [key for key in transaction.raw if key.startswith("_bankfile")]
+
+
+def test_a_name_that_does_not_start_with_the_account_is_left_exactly_as_parsed() -> None:
+    """The guard that makes this repair safe to keep: the day `mt940` maps `?31` correctly the
+    name no longer starts with the account, and this has to become a no-op rather than eat the
+    first characters of somebody's name."""
+    block = SUBFIELD_31_BLOCK.replace(b"?32KARL KAUFMANN", b"?32ZZ TOP")
+
+    transaction = read_mt940(block).transactions[0]
+
+    assert transaction.counterparty_name == "ZZ TOP"
+    assert transaction.counterparty_account == "DE14508800500194785000"
+
+
+def test_an_unstructured_86_field_is_not_touched_by_the_repair() -> None:
+    """A `:86:` with no `?` subfields at all never reaches the parse the repair depends on."""
+    block = SUBFIELD_31_BLOCK.replace(
+        b":86:166?00GUTSCHRIFT?100399?20EREF+X?30DRESDEFF508"
+        b"?31DE14508800500194785000?32KARL KAUFMANN",
+        b":86:just some free text",
+    )
+
+    transaction = read_mt940(block).transactions[0]
+
+    assert transaction.counterparty_name is None

@@ -22,6 +22,16 @@ own, twice measured against a real file:
   entry is otherwise sound and the model has no null date, but the day the file actually stated
   is put back into `raw` and a `date` warning names it. A date quietly moved by one day is the
   wrong but plausible value of section 0, and it must never reach a reconciliation unannounced.
+- the COUNTERPARTY of a German `:86:`. `mt-940` 5.0.0 maps subfield `?31` to `applicant_name`,
+  where 4.30.0 mapped it to `applicant_iban`, so the account number is appended to the front of
+  the name and the IBAN field stops existing. Per the DFUe-Abkommen Anlage 3 subfield table `?31`
+  is the Kontonummer and `?32` with `?33` are the name, and all 69 occurrences of `?31` in the
+  vendored corpus are account numbers, none a name. Left alone this returns
+  `DE42100100100043921105Richter Renate` as a counterparty and the BIC as their account: two
+  wrong but plausible values on the field a reconciliation matches a payer by. The pair
+  `_capture_subfield_31` and `_restore_subfield_31` puts them back, and only when the name
+  literally starts with the `?31` value, so it becomes a no-op the day upstream fixes it.
+  Introduced upstream in `b177a3e`, which is a commit about a different subfield.
 
 Four more decisions, the first three of them the failure doctrine of
 `corpus/reading-rules.md` section 0 applied to a real corpus:
@@ -72,7 +82,10 @@ from typing import Any
 
 import mt940
 from mt940.models import Transactions
-from mt940.processors import date_fixup_pre_processor
+from mt940.processors import (
+    date_fixup_pre_processor,
+    transaction_details_post_processor,
+)
 
 from bankfile.model import ReadWarning, Source, Statement, Transaction
 from bankfile.report import check_reconciliation, dedupe
@@ -406,10 +419,71 @@ def _record_impossible_date(
     return tag_dict
 
 
-# The library's own statement pre-processor is kept and merely preceded: dropping it would turn
-# an impossible date back into an exception, which costs the whole block.
+# The `?31` value of a structured `:86:`, read back off the raw tag because the parser no longer
+# keeps it in a field of its own. Segments run to the next `?`, so the value is everything up to
+# it.
+_SUBFIELD_31 = re.compile(r"\?31([^?]*)")
+
+
+# Where the captured value is parked between the two halves of the repair. Private, and removed
+# again before the mapping runs, so it never reaches `raw` and never becomes a field we own.
+_CAPTURED_31 = "_bankfile_subfield_31"
+
+
+def _capture_subfield_31(
+    _transactions: Transactions, _tag: mt940.tags.Tag, tag_dict: _TagDict, *_args: Any
+) -> _TagDict:
+    """Read `?31` off the raw `:86:` before the library consumes it.
+
+    This has to happen in the PRE hook: `transaction_details_post_processor` deletes
+    `transaction_details` once it has parsed it, so by the time anything runs after it the raw
+    tag is gone and the subfield cannot be recovered.
+    """
+    details = tag_dict.get("transaction_details")
+    if not isinstance(details, str):
+        return tag_dict
+    # Same rejoin as the library's own processor: subfields are split across physical lines.
+    match = _SUBFIELD_31.search("".join(line.strip("\n\r") for line in details.splitlines()))
+    if match is not None and match.group(1).strip():
+        tag_dict[_CAPTURED_31] = match.group(1).strip()
+    return tag_dict
+
+
+def _restore_subfield_31(
+    _transactions: Transactions,
+    _tag: mt940.tags.Tag,
+    _tag_dict: _TagDict,
+    result: dict[str, Any],
+    *_args: Any,
+) -> dict[str, Any]:
+    """Split the counterparty account back off the counterparty name.
+
+    See the module docstring: `mt-940` 5.0.0 joins `?31` onto `?32`, so the name arrives with an
+    account number welded to its front and `applicant_iban` is gone. This runs after the
+    library's own post-processor, on the value `_capture_subfield_31` parked earlier.
+
+    The guard is deliberately narrow: the name has to literally START with the `?31` value.
+    Anything else is left exactly as the parser returned it, so a future `mt940` that maps `?31`
+    correctly turns this into a no-op instead of a second bug.
+    """
+    account = result.pop(_CAPTURED_31, None)
+    name = result.get("applicant_name")
+    if not isinstance(account, str) or not isinstance(name, str) or not name.startswith(account):
+        return result
+    result["applicant_name"] = name[len(account) :].strip() or None
+    # `setdefault`, not assignment: if a dialect ever does supply the field, it wins.
+    result.setdefault("applicant_iban", account)
+    return result
+
+
+# The library's own processors are kept and merely wrapped: dropping `date_fixup_pre_processor`
+# would turn an impossible date back into an exception, which costs the whole block, and dropping
+# `transaction_details_post_processor` would lose the `:86:` parse this module explicitly does
+# not reimplement. Naming a key replaces its whole list, so both are re-listed here.
 _PROCESSORS: dict[str, list[Callable[..., _TagDict]]] = {
-    "pre_statement": [_record_impossible_date, date_fixup_pre_processor]
+    "pre_statement": [_record_impossible_date, date_fixup_pre_processor],
+    "pre_transaction_details": [_capture_subfield_31],
+    "post_transaction_details": [transaction_details_post_processor, _restore_subfield_31],
 }
 
 

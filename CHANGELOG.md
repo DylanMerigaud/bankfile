@@ -9,6 +9,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 [semantic](https://semver.org/spec/v2.0.0.html), where a **breaking** change includes any change
 to a normalised value that a caller could already have been relying on.
 
+## [Unreleased]
+
+### Fixed
+
+- **A German counterparty no longer comes back with their account number welded to the front of
+  their name.** `mt-940` 5.0.0 maps `:86:` subfield `?31` to `applicant_name`, where 4.30.0
+  mapped it to `applicant_iban`, so `?31` and `?32` are joined into one string and the IBAN
+  field stops existing. Measured on the vendored corpus: **59 transactions across 5 files**
+  returned a `counterparty_name` such as `DE42100100100043921105Richter Renate`, while
+  `counterparty_account` fell through to the BIC. Per the DFUe-Abkommen Anlage 3 subfield table
+  `?31` is the Kontonummer and `?32` with `?33` are the name, and all 69 occurrences of `?31` in
+  the corpus are account numbers, none a name.
+
+  Both fields now carry what the file says. The repair reads `?31` off the raw `:86:` before the
+  parser consumes it and only acts when the name literally starts with that value, so it becomes
+  a no-op the day upstream fixes it rather than a second bug.
+
+  **This changes two normalised values a caller could have relied on**, which is breaking by the
+  rule at the top of this file. It is a correction, not a redefinition: the old values were the
+  wrong-but-plausible kind that a reconciliation matches a payer by and never flags.
+
 ## [0.1.1] - 2026-08-06
 
 ### Fixed
