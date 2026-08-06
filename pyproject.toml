@@ -1,0 +1,80 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bankstatements"
+version = "0.0.1"
+description = "One schema for every bank statement format: MT940, MT942, CAMT.053, BAI2, OFX/QFX."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Dylan Merigaud" }]
+keywords = ["mt940", "camt053", "bai2", "ofx", "qfx", "bank", "statement", "iso20022", "fintech"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Topic :: Office/Business :: Financial :: Accounting",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/DylanMerigaud/bankstatements"
+Issues = "https://github.com/DylanMerigaud/bankstatements/issues"
+
+[project.scripts]
+bankstatements = "bankstatements.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-cov>=5", "mypy>=1.11", "ruff>=0.6"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+# STRICT PAR DEFAUT, et chaque exemption porte sa raison ecrite. C'est la regle du kit
+# (eslint.config.mts): une exemption sans justification est une regle qu'on desactive parce
+# qu'elle derange, pas parce qu'elle a tort.
+[tool.ruff.lint]
+select = [
+  "E", "W",      # pycodestyle
+  "F",           # pyflakes
+  "I",           # import order
+  "N",           # pep8-naming
+  "UP",          # pyupgrade
+  "B",           # bugbear
+  "A",           # shadowing des builtins
+  "C4",          # comprehensions
+  "DTZ",         # datetimes naifs: un releve bancaire porte des dates, jamais d'ambiguite
+  "T20",         # pas de print en librairie
+  "SIM", "RET", "ARG", "PTH", "ERA", "PL", "RUF", "TRY", "PERF", "S",
+]
+ignore = [
+  # Le corps d'un parseur EST une suite de branches sur des cas de banques reels. Plafonner
+  # la complexite ici pousserait a decouper en fonctions d'une ligne dont le seul role serait
+  # de satisfaire le compteur, ce qui rend le cas de banque PLUS difficile a lire, pas moins.
+  "PLR0912", "PLR0911",
+  # Les codes de tags et les largeurs de champs SONT des constantes du format. Les nommer
+  # ferait un dictionnaire de 200 entrees qui dit deux fois la meme chose que la spec.
+  "PLR2004",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Les tests affirment sur des valeurs litterales tirees de vrais fichiers: c'est le point.
+"tests/**" = ["S101", "PLR2004"]
+# La CLI et les scripts de verification ecrivent sur la sortie standard, c'est leur fonction.
+# Exemption de PORTEE, pas de confort: elle nomme deux chemins, elle ne desactive pas la regle.
+"src/bankstatements/cli.py" = ["T20"]
+"scripts/**" = ["T20"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+addopts = "-q --cov=bankstatements --cov-report=term-missing --cov-fail-under=85"
+testpaths = ["tests"]

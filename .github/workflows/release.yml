@@ -1,0 +1,21 @@
+name: release
+
+# Publie sur PyPI quand une etiquette de version est poussee.
+# Publication de confiance (OIDC): aucun secret PYPI_TOKEN. A configurer une fois sur
+# pypi.org (project -> Publishing -> Trusted publisher: GitHub Actions, repo
+# DylanMerigaud/bankstatements, workflow release.yml). Meme motif que fintech-roast cote npm.
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1

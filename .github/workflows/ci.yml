@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-groups
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Le socle des distributions encore soutenues. Un parseur de format bancaire vit dans
+        # des piles anciennes: casser 3.10 pour une syntaxe recente couterait plus d'adoption
+        # que la syntaxe n'en fait gagner.
+        python: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-groups
+      - run: uv run --python ${{ matrix.python }} pytest
+
+  corpus:
+    # Le corpus est l'ACTIF du projet, pas le code: le code se regenere, les deviations reelles
+    # des banques ne s'inventent pas. Il est donc valide au meme titre que les tests.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 scripts/validate_corpus.py

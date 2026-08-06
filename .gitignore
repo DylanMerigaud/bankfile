@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Les fichiers de banque NON anonymises ne doivent jamais entrer: le corpus ne porte que du
+# structurel. Un depot prive n'est pas une excuse, il deviendra public.
+corpus/banks/**/*.raw
