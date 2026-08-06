@@ -9,7 +9,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 [semantic](https://semver.org/spec/v2.0.0.html), where a **breaking** change includes any change
 to a normalised value that a caller could already have been relying on.
 
-## [Unreleased]
+## [0.2.0] - 2026-08-06
 
 ### Fixed
 

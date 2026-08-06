@@ -4,15 +4,30 @@
 [![pypi](https://img.shields.io/pypi/v/bankfile.svg)](https://pypi.org/project/bankfile/)
 [![python](https://img.shields.io/pypi/pyversions/bankfile.svg)](https://pypi.org/project/bankfile/)
 
-One schema for every bank file: MT940, MT942, CAMT.053, BAI2, OFX/QFX.
+One schema for MT940 and OFX/QFX, with the bank deviations that break other parsers written down.
 
 The name says `file` and not `statement`, and that is deliberate: the day the library reads a
 payment order (`pain.001`) or an ACH file, those are not statements, and a name that promises
 statements would fight its own scope.
 
-**Reads today: MT940 and OFX/QFX** (OFX 1.x SGML and OFX 2.x XML). MT942, CAMT.053 and BAI2
-are the next formats, and they are not written yet. This list is the honest one, not the
-roadmap.
+**Reads today: MT940 and OFX/QFX** (OFX 1.x SGML and OFX 2.x XML). This list is the honest one,
+not the roadmap.
+
+## Status, so you can decide before you depend on it
+
+**No further formats are planned.** MT942, CAMT.053 and BAI2 were on the roadmap and are not
+being built. What exists is finished and tested rather than half-done: 551 tests, 98% coverage,
+a corpus of 18 documented bank deviations each carrying the source it came from and a dated
+measurement, and a reconciliation check that tells you when a file contradicts its own balances.
+
+It is not abandoned and it is not staffed either. Issues are read. Nothing is promised on
+response time, and you should size that into your decision rather than discover it later.
+
+If you need a format this does not read, these are maintained and worth your time before this
+library is: [`ofxtools`](https://github.com/csingley/ofxtools) for OFX/QFX,
+[`mt-940`](https://github.com/wolph/mt940) for MT940 (which this wraps),
+[`bai2`](https://pypi.org/project/bai2/) for BAI2, and
+[`sepaxml`](https://github.com/raphaelm/python-sepaxml) for SEPA.
 
 ## Quickstart
 

@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "bankfile"
-version = "0.1.1"
-description = "One schema for bank files: MT940 and OFX/QFX today, MT942, CAMT.053 and BAI2 next."
+version = "0.2.0"
+description = "One normalised schema for MT940 and OFX/QFX bank files, with a corpus of real bank deviations."
 readme = "README.md"
 # MIT alone, and only this project's own notice. The borrowed bank fixtures live under
 # tests/fixtures/ and are excluded from every artifact, which the `package` CI job enforces by
