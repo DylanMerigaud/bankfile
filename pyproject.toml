@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "bankstatements"
+name = "bankfile"
 version = "0.0.1"
-description = "One schema for every bank statement format: MT940, MT942, CAMT.053, BAI2, OFX/QFX."
+description = "One schema for every bank file: MT940, MT942, CAMT.053, BAI2, OFX/QFX."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -20,11 +20,11 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/DylanMerigaud/bankstatements"
-Issues = "https://github.com/DylanMerigaud/bankstatements/issues"
+Homepage = "https://github.com/DylanMerigaud/bankfile"
+Issues = "https://github.com/DylanMerigaud/bankfile/issues"
 
 [project.scripts]
-bankstatements = "bankstatements.cli:main"
+bankfile = "bankfile.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8", "pytest-cov>=5", "mypy>=1.11", "ruff>=0.6"]
@@ -66,7 +66,7 @@ ignore = [
 "tests/**" = ["S101", "PLR2004"]
 # La CLI et les scripts de verification ecrivent sur la sortie standard, c'est leur fonction.
 # Exemption de PORTEE, pas de confort: elle nomme deux chemins, elle ne desactive pas la regle.
-"src/bankstatements/cli.py" = ["T20"]
+"src/bankfile/cli.py" = ["T20"]
 "scripts/**" = ["T20"]
 
 [tool.mypy]
@@ -76,5 +76,5 @@ warn_unreachable = true
 files = ["src", "tests"]
 
 [tool.pytest.ini_options]
-addopts = "-q --cov=bankstatements --cov-report=term-missing --cov-fail-under=85"
+addopts = "-q --cov=bankfile --cov-report=term-missing --cov-fail-under=85"
 testpaths = ["tests"]

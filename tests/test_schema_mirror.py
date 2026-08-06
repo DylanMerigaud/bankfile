@@ -12,7 +12,7 @@ import json
 from dataclasses import fields
 from pathlib import Path
 
-from bankstatements.model import Transaction
+from bankfile.model import Transaction
 
 SCHEMA = Path(__file__).resolve().parent.parent / "corpus" / "schema" / "transaction.schema.json"
 

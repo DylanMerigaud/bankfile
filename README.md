@@ -1,16 +1,20 @@
-# bankstatements
+# bankfile
 
-Un schema pour tous les formats de releve bancaire: MT940, MT942, CAMT.053, BAI2, OFX/QFX.
+Un schema pour tous les fichiers de banque: MT940, MT942, CAMT.053, BAI2, OFX/QFX.
+
+Le nom dit `fichier` et non `releve`, et c'est delibere: le jour ou la librairie lit un ordre de
+paiement (`pain.001`) ou un fichier ACH, ce ne sont pas des releves, et un nom qui promet des
+releves se battrait contre son propre perimetre.
 
 ## Quickstart
 
 ```bash
-pip install bankstatements
-bankstatements releve.sta --json
+pip install bankfile
+bankfile releve.sta --json
 ```
 
 ```python
-from bankstatements import parse
+from bankfile import parse
 
 for tx in parse("releve.sta"):
     print(tx.date, tx.amount, tx.counterparty_name)

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/DylanMerigaud/bankstatements/corpus/schema/transaction.schema.json",
+  "$id": "https://github.com/DylanMerigaud/bankfile/corpus/schema/transaction.schema.json",
   "title": "Transaction bancaire normalisee",
   "description": "LE SCHEMA EST UNE DONNEE, PAS DU CODE, et c'est delibere. Le meme corpus doit servir l'implementation Python et l'implementation TypeScript sans qu'aucune ne devienne la reference: deux implementations qui portent chacune leur verite divergent, et c'est ainsi que ce genre de projet meurt. Mesure qui motive ce fichier (2026-08-05): sur la meme notion de transaction, la librairie mt940 rend 37 champs et ofxparse en rend 10, avec seulement TROIS champs en commun (montant, date, identifiant). La contrepartie s'appelle applicant_name d'un cote et payee de l'autre.",
   "type": "object",

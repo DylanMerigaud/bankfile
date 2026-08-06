@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from bankstatements.model import Transaction
+from bankfile.model import Transaction
 
 
 def tx(**kw: object) -> Transaction:
