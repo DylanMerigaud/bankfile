@@ -26,14 +26,15 @@ from bankfile.transaction_types import normalise as normalise_type
 
 # A bank statement and a credit card statement carry the same shape under different tags.
 STATEMENT_TAGS = ("STMTRS", "CCSTMTRS")
+# Walking into a nested statement is how one account's money ends up under another's.
+STATEMENT_BOUNDARY = frozenset(STATEMENT_TAGS)
 ACCOUNT_FROM_TAGS = ("BANKACCTFROM", "CCACCTFROM")
 ACCOUNT_TO_TAGS = ("BANKACCTTO", "CCACCTTO")
 
 
 def _first(node: Node, tags: tuple[str, ...]) -> Node | None:
     for tag in tags:
-        found = node.find(tag)
-        if found is not None:
+        for found in node.find_all(tag, stop_at=STATEMENT_BOUNDARY):
             return found
     return None
 
@@ -47,17 +48,24 @@ def _text(node: Node, *tags: str) -> str | None:
     a crash.
     """
     for tag in tags:
-        value = node.text(tag)
+        value = node.child_text(tag)
         if value:
             return value
     return None
 
 
+def _statement_text(node: Node, tag: str) -> str | None:
+    """A statement level field, looked up without crossing into a nested statement."""
+    for found in node.find_all(tag, stop_at=STATEMENT_BOUNDARY):
+        return found.value
+    return None
+
+
 def _transaction_currency(node: Node, default: str | None) -> str | None:
     """`CURRENCY` on a transaction overrides the statement default, per OFX."""
-    currency = node.find("CURRENCY")
+    currency = node.child("CURRENCY")
     if currency is not None:
-        symbol = currency.text("CURSYM")
+        symbol = currency.child_text("CURSYM")
         if symbol:
             return symbol
     return default
@@ -129,14 +137,14 @@ def _read_transaction(
         )
 
     account_to = _first(node, ACCOUNT_TO_TAGS)
-    payee = node.find("PAYEE")
+    payee = node.child("PAYEE")
     return Transaction(
         date=date,
         amount=amount,
         currency=currency,
         raw=_raw_fields(node),
         booking_date=booking_date,
-        counterparty_name=_text(node, "NAME") or (payee.text("NAME") if payee else None),
+        counterparty_name=_text(node, "NAME") or (payee.child_text("NAME") if payee else None),
         counterparty_account=account_to.text("ACCTID") if account_to else None,
         reference=_text(node, "REFNUM"),
         purpose=_text(node, "MEMO"),
@@ -152,7 +160,19 @@ def read_ofx(data: bytes, *, path: str | None = None) -> Statement:
     root, tag_warnings = parse_tags(header.body)
     warnings: list[ReadWarning] = [*header.warnings, *tag_warnings]
 
-    statements = [node for tag in STATEMENT_TAGS for node in root.find_all(tag)]
+    # Counted twice on purpose, and the difference matters.
+    #
+    # `present` counts EVERY statement aggregate in the document, nested ones included. `usable`
+    # keeps only the outermost, because a statement nested inside another is the second half of
+    # a file whose `</STMTRS>` was omitted, and merging it would put one account's money under
+    # another account's number and currency.
+    #
+    # Using `usable` alone would then drop that second account in SILENCE, which is the failure
+    # this project calls worse than a crash. So the count that decides the warning is `present`.
+    present = [node for tag in STATEMENT_TAGS for node in root.find_all(tag)]
+    statements = [
+        node for tag in STATEMENT_TAGS for node in root.find_all(tag, stop_at=STATEMENT_BOUNDARY)
+    ]
     if not statements:
         return Statement(
             source=Source(format="OFX", path=path, encoding=header.encoding),
@@ -171,16 +191,16 @@ def read_ofx(data: bytes, *, path: str | None = None) -> Statement:
                 ]
             ),
         )
-    if len(statements) > 1:
+    if len(present) > 1:
         # Phase 1 reads one statement per file. Saying so is better than quietly returning the
         # first of several and letting a caller reconcile a third of an account.
         warnings.append(
             ReadWarning(
                 rule="tag",
                 field="STMTRS",
-                value=str(len(statements)),
+                value=str(len(present)),
                 message=(
-                    f"{len(statements)} statements in this file, only the first is returned. "
+                    f"{len(present)} statements in this file, only the first is returned. "
                     f"Multi statement files are not handled yet."
                 ),
             )
@@ -188,24 +208,24 @@ def read_ofx(data: bytes, *, path: str | None = None) -> Statement:
     statement = statements[0]
 
     account_node = _first(statement, ACCOUNT_FROM_TAGS)
-    currency = _text(statement, "CURDEF")
+    currency = _statement_text(statement, "CURDEF")
     closing: Decimal | None = None
-    ledger = statement.find("LEDGERBAL")
+    ledger = _first(statement, ("LEDGERBAL",))
     if ledger is not None:
-        balance_raw = ledger.text("BALAMT")
+        balance_raw = ledger.child_text("BALAMT")
         if balance_raw:
             closing, balance_warnings = parse_amount(balance_raw, field="BALAMT")
             warnings.extend(balance_warnings)
 
     transactions = []
-    for node in statement.find_all("STMTTRN"):
+    for node in statement.find_all("STMTTRN", stop_at=STATEMENT_BOUNDARY):
         transaction = _read_transaction(node, default_currency=currency, warnings=warnings)
         if transaction is not None:
             transactions.append(transaction)
 
     return Statement(
         source=Source(format="OFX", path=path, encoding=header.encoding),
-        account=account_node.text("ACCTID") if account_node else None,
+        account=account_node.child_text("ACCTID") if account_node else None,
         currency=currency,
         # OFX 1.x has LEDGERBAL and AVAILBAL and no opening balance element at all. We could
         # subtract the transactions from the closing balance; we do not, because on a filtered

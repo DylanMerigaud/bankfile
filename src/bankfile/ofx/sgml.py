@@ -92,24 +92,46 @@ class Node:
         wanted = tag.upper()
         return next((node for node in self._descendants() if node.tag == wanted), None)
 
-    def find_all(self, tag: str) -> list[Node]:
-        """Every descendant carrying this tag, in document order."""
+    def find_all(self, tag: str, *, stop_at: frozenset[str] = frozenset()) -> list[Node]:
+        """Every descendant carrying this tag, in document order.
+
+        `stop_at` names tags the walk must not enter. It exists because of a real defect: OFX
+        1.x lets an aggregate omit its end tag, so a file with two statements and no
+        `</STMTRS>` nests the second inside the first. Searching descendants then hands the
+        second account's entries to the first, stamped with the first account's currency, which
+        is a wrong amount under a wrong account, the exact failure this library exists to
+        prevent.
+        """
         wanted = tag.upper()
-        return [node for node in self._descendants() if node.tag == wanted]
+        return [node for node in self._descendants(stop_at=stop_at) if node.tag == wanted]
+
+    def child(self, tag: str) -> Node | None:
+        """The first DIRECT child carrying this tag.
+
+        Used wherever a field belongs to one element and must not be borrowed from a nested
+        one: a transaction inside a transaction would otherwise lend its amount to its parent.
+        """
+        wanted = tag.upper()
+        return next((node for node in self.children if node.tag == wanted), None)
+
+    def child_text(self, tag: str) -> str | None:
+        found = self.child(tag)
+        return found.value if found is not None else None
 
     def text(self, tag: str) -> str | None:
         """The value of the first descendant carrying this tag, or None if there is none."""
         found = self.find(tag)
         return found.value if found is not None else None
 
-    def _descendants(self) -> Iterator[Node]:
+    def _descendants(self, *, stop_at: frozenset[str] = frozenset()) -> Iterator[Node]:
         # Iterative, like _freeze and for the same reason: a corrupt file nests as deep as it
         # likes, and a lookup that answers RecursionError is a lookup that failed.
         stack = list(reversed(self.children))
         while stack:
             node = stack.pop()
             yield node
-            stack.extend(reversed(node.children))
+            if node.tag not in stop_at:
+                stack.extend(reversed(node.children))
 
 
 @dataclass(slots=True)

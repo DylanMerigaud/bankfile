@@ -5,12 +5,18 @@ build-backend = "hatchling.build"
 [project]
 name = "bankfile"
 version = "0.0.1"
-description = "One schema for every bank file: MT940, MT942, CAMT.053, BAI2, OFX/QFX."
+description = "One schema for bank files: MT940 and OFX/QFX today, MT942, CAMT.053 and BAI2 next."
 readme = "README.md"
-license = "MIT"
+# The code is MIT. The sdist also carries bank fixtures borrowed from other projects' test
+# suites, which keep their own terms, so the expression names them rather than quietly
+# publishing someone else's BSD material as MIT.
+license = "MIT AND BSD-3-Clause"
+license-files = ["LICENSE", "tests/fixtures/mt940/*/LICENSE"]
 requires-python = ">=3.10"
 authors = [{ name = "Dylan Merigaud" }]
-keywords = ["mt940", "camt053", "bai2", "ofx", "qfx", "bank", "statement", "iso20022", "fintech"]
+# No camt053, bai2 or iso20022 here until the library reads them. A keyword is a promise made
+# to someone searching PyPI, and the one thing a finance library cannot afford is to overclaim.
+keywords = ["mt940", "ofx", "qfx", "bank", "statement", "reconciliation", "fintech"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Financial and Insurance Industry",
@@ -18,12 +24,16 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  # The floor is 5.0 and it was MEASURED, not guessed: the adapter reads mt940.tags.StatementGLS,
+  # which does not exist before 5.0.0. Declared as >=4.30 first, which imported fine on its own
+  # and made `import bankfile` fail with AttributeError on every 4.x. A dependency floor nobody
+  # installs is a floor nobody tests.
   # wolph/mt940, BSD licensed and maintained. NOT rewritten, on purpose: it already structures
   # the :86: field, including reassembling a purpose across ?2x subfields AND across physical
   # line breaks. That was verified by running it on a real German file, after reading its regex
   # and concluding the opposite. Reading code and inferring behaviour is the mistake this
   # project keeps paying for. Its floor is Python 3.10, same as ours.
-  "mt-940>=4.30",
+  "mt-940>=5.0",
 ]
 
 [project.urls]
@@ -105,3 +115,9 @@ files = ["src", "tests"]
 [tool.pytest.ini_options]
 addopts = "-q --cov=bankfile --cov-report=term-missing --cov-fail-under=85"
 testpaths = ["tests"]
+
+[tool.hatch.build.targets.sdist]
+# The borrowed bank fixtures stay out of the published artifact. They are test inputs, they are
+# not ours, and an audit found a named person's real statement among them: the fewer places
+# that data can travel to, the better. Anyone who wants to run the suite clones the repository.
+exclude = ["tests/fixtures/**"]

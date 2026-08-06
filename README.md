@@ -29,9 +29,12 @@ for warning in statement.warnings:
     print(warning.rule, warning.field, warning.message)
 ```
 
-The same code reads a German MT940 and a Chase QFX and returns the same fields. Not "similar
-fields": the test that gates this project compares the two documents and fails on any
-difference outside provenance and the origin-format passthrough.
+The same code reads an MT940 and an OFX and returns the same fields. Not "similar fields":
+`tests/test_same_json_across_formats.py` builds both documents from one synthetic account
+described in both formats and fails on any difference outside three named exclusions, which are
+`source` (provenance), each entry's `raw` (the origin format's own fields), and
+`opening_balance`, which OFX 1.x has no element for and which we refuse to compute by
+subtraction. That last difference is pinned by its own test rather than hidden in the list.
 
 ## Why this exists, and what it is not
 

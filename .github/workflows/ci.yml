@@ -30,6 +30,19 @@ jobs:
       - run: uv sync --all-groups
       - run: uv run --python ${{ matrix.python }} pytest
 
+  floor:
+    # The declared dependency floor is a claim, and an untested claim is a wrong one. This job
+    # installs it EXACTLY. It exists because `mt-940>=4.30` was declared without being tried:
+    # the package imported fine on its own and `import bankfile` raised AttributeError on every
+    # 4.x, so the metadata promised an installation that could not work.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-groups
+      - run: uv pip install "mt-940==5.0.0"
+      - run: uv run --no-sync pytest
+
   corpus:
     # The corpus is the ASSET of the project, not the code: code can be regenerated, the real
     # deviations of banks cannot be invented. So it is validated just like the tests.
