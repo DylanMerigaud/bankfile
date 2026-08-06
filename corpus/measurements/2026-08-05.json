@@ -1,0 +1,499 @@
+{
+  "chase/blank-line-before-header-none-after.qfx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 0,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 0,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON MERCHANT', memo='ANON"
+    }
+  },
+  "chase/non-ascii-byte-declared-usascii.qfx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": false,
+      "error": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xa6 in position 620: invalid start byte"
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON ¦ MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON ¦ MERCHANT', memo='AN"
+    }
+  },
+  "etrade/charset-none-with-encoding-usascii.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": false,
+      "error": "LookupError: unknown encoding: cpNONE"
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": false,
+      "error": "LookupError: unknown encoding: cpNONE"
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON MERCHANT', memo='ANON"
+    }
+  },
+  "hsbc-brasil/dtstart-ddmmyy.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": false,
+      "error": "OFXSpecError: Can't set BANKTRANLIST.dtstart to 010126: '010126' does not conform to OFX formats for <class 'datetime.datetime'>"
+    }
+  },
+  "lcl/check-without-payee.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "check",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "",
+        "memo": "",
+        "checknum": "1090381"
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "check",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "",
+        "memo": "",
+        "checknum": "1090381"
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='CHECK', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', checknum='1090381')>"
+    }
+  },
+  "onpoint-community-credit-union/self-closing-memo-tag.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": false,
+      "error": "OFXSpecError: Can't set STMTRS.ledgerbal to None: SubAggregate: Value is required"
+    }
+  },
+  "unnamed-bank/amount-comma-decimal.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-2000.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-2000.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-2000.00'), fitid='T0001', name='ANON MERCHANT', memo='AN"
+    }
+  },
+  "unnamed-bank/amount-plus-sign-and-space.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "1006.60",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "1006.60",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": false,
+      "error": "InvalidOperation: [<class 'decimal.ConversionSyntax'>]"
+    }
+  },
+  "unnamed-bank/blank-line-before-header.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 0,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 0,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON MERCHANT', memo='ANON"
+    }
+  },
+  "unnamed-bank/character-outside-latin1.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": false,
+      "error": "UnicodeEncodeError: 'latin-1' codec can't encode character '\\u010d' in position 625: ordinal not in range(256)"
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON UPRAVA č",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON UPRAVA č', memo='ANON"
+    }
+  },
+  "unnamed-bank/charset-8859-1-without-iso-prefix.qfx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": false,
+      "error": "OFXHeaderError: Invalid OFX header - '8859-1' is not OneOf ('ISO-8859-1', '1252', 'NONE')"
+    }
+  },
+  "unnamed-bank/chknum-instead-of-checknum.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON MERCHANT', memo='ANON"
+    }
+  },
+  "unnamed-bank/empty-tags-curdef-fitid-name.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": false,
+      "error": "IndexError: list index out of range"
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": false,
+      "error": "IndexError: list index out of range"
+    },
+    "ofxtools_1_1_1": {
+      "ok": false,
+      "error": "OFXSpecError: Can't set STMTTRN.fitid to None: String: Value is required"
+    }
+  },
+  "unnamed-bank/mixed-case-trntype.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "credit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "credit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": false,
+      "error": "OFXSpecError: Can't set STMTTRN.trntype to Credit: 'Credit' is not OneOf ('CREDIT', 'DEBIT', 'INT', 'DIV', 'FEE', 'SRVCHG', 'DEP', 'ATM', 'POS', 'XFER', 'CHECK', 'PAYMENT', 'CASH', 'DIRECTDEP', 'DIRECTDEBIT', 'REPE"
+    }
+  },
+  "unnamed-bank/tags-outside-spec.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON MERCHANT', memo='ANON"
+    }
+  },
+  "unnamed-bank/xml-declaration-ofx-2.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": false,
+      "error": "UnicodeDecodeError: 'ascii' codec can't decode byte 0xc9 in position 992: ordinal not in range(128)"
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": false,
+      "error": "UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 992: ordinal not in range(128)"
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON ÉNERGIE', memo='ANON "
+    }
+  },
+  "unnamed-bank/zero-date.ofx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": true,
+      "headers_read": 9,
+      "transactions": 1,
+      "first": {
+        "type": "debit",
+        "amount": "-10.00",
+        "date": "2026-01-15 00:00:00",
+        "payee": "ANON MERCHANT",
+        "memo": "ANON MEMO",
+        "checknum": ""
+      }
+    },
+    "ofxtools_1_1_1": {
+      "ok": false,
+      "error": "OFXSpecError: Can't set LEDGERBAL.dtasof to 00000000: '00000000' does not conform to OFX formats for <class 'datetime.datetime'>"
+    }
+  },
+  "wells-fargo/header-on-one-line.qfx": {
+    "ofxparse_0_21_text_mode": {
+      "ok": false,
+      "error": "ValueError: too many values to unpack (expected 2)"
+    },
+    "ofxparse_0_21_binary_mode": {
+      "ok": false,
+      "error": "ValueError: too many values to unpack (expected 2)"
+    },
+    "ofxtools_1_1_1": {
+      "ok": true,
+      "transactions": 1,
+      "first": "<STMTTRN(trntype='DEBIT', dtposted=datetime.datetime(2026, 1, 15, 0, 0, tzinfo=<UTC>), trnamt=Decimal('-10.00'), fitid='T0001', name='ANON MERCHANT', memo='ANON"
+    }
+  }
+}

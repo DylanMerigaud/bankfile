@@ -34,9 +34,9 @@ line-length = 100
 target-version = "py310"
 src = ["src", "tests"]
 
-# STRICT PAR DEFAUT, et chaque exemption porte sa raison ecrite. C'est la regle du kit
-# (eslint.config.mts): une exemption sans justification est une regle qu'on desactive parce
-# qu'elle derange, pas parce qu'elle a tort.
+# STRICT BY DEFAULT, and every exemption carries its written reason. It is the rule of the kit
+# (eslint.config.mts): an exemption without a justification is a rule you switch off because it
+# bothers you, not because it is wrong.
 [tool.ruff.lint]
 select = [
   "E", "W",      # pycodestyle
@@ -45,29 +45,34 @@ select = [
   "N",           # pep8-naming
   "UP",          # pyupgrade
   "B",           # bugbear
-  "A",           # shadowing des builtins
+  "A",           # shadowing of builtins
   "C4",          # comprehensions
-  "DTZ",         # datetimes naifs: un releve bancaire porte des dates, jamais d'ambiguite
-  "T20",         # pas de print en librairie
+  "DTZ",         # naive datetimes: a bank statement carries dates, never ambiguity
+  "T20",         # no print in a library
   "SIM", "RET", "ARG", "PTH", "ERA", "PL", "RUF", "TRY", "PERF", "S",
 ]
 ignore = [
-  # Le corps d'un parseur EST une suite de branches sur des cas de banques reels. Plafonner
-  # la complexite ici pousserait a decouper en fonctions d'une ligne dont le seul role serait
-  # de satisfaire le compteur, ce qui rend le cas de banque PLUS difficile a lire, pas moins.
+  # The body of a parser IS a sequence of branches over real bank cases. Capping complexity
+  # here would push us to split into one-line functions whose only role would be to satisfy
+  # the counter, which makes the bank case HARDER to read, not easier.
   "PLR0912", "PLR0911",
-  # Les codes de tags et les largeurs de champs SONT des constantes du format. Les nommer
-  # ferait un dictionnaire de 200 entrees qui dit deux fois la meme chose que la spec.
+  # Tag codes and field widths ARE constants of the format. Naming them would produce a
+  # 200-entry dictionary that says the same thing as the spec twice.
   "PLR2004",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Les tests affirment sur des valeurs litterales tirees de vrais fichiers: c'est le point.
+# The tests assert on literal values taken from real files: that is the point.
 "tests/**" = ["S101", "PLR2004"]
-# La CLI et les scripts de verification ecrivent sur la sortie standard, c'est leur fonction.
-# Exemption de PORTEE, pas de confort: elle nomme deux chemins, elle ne desactive pas la regle.
+# The CLI and the verification scripts write to standard output, that is their function.
+# A SCOPE exemption, not a comfort one: it names two paths, it does not switch off the rule.
 "src/bankfile/cli.py" = ["T20"]
 "scripts/**" = ["T20"]
+# measure_parsers.py imports ofxparse and ofxtools INSIDE its functions on purpose. Neither is
+# a dependency of this package, and neither should ever become one: nothing here may pull in an
+# abandoned parser, and CI must not depend on it. A top-level import would make the file
+# unloadable everywhere except the throwaway environment it is meant to be run in.
+"scripts/measure_parsers.py" = ["T20", "PLC0415"]
 
 [tool.mypy]
 python_version = "3.10"

@@ -1,0 +1,235 @@
+[
+  {
+    "fixture": "corpus/banks/wells-fargo/header-on-one-line.qfx",
+    "bank": "Wells Fargo",
+    "case": "header-on-one-line",
+    "encoding": "utf-8",
+    "sources": [
+      172
+    ],
+    "quoted": [
+      "OFXHEADER:100DATA:OFXSGMLVERSION:102SECURITY:NONEENCODING:USASCIICHARSET:1252COMPRESSION:NONEOLDFILEUID:NONENEWFILEUID:NONE"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/chase/blank-line-before-header-none-after.qfx",
+    "bank": "Chase",
+    "case": "blank-line-before-header-none-after",
+    "encoding": "utf-8",
+    "sources": [
+      160
+    ],
+    "quoted": [
+      "(blank line)\nOFXHEADER:100\n...\nNEWFILEUID:NONE\n<OFX>"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/chase/non-ascii-byte-declared-usascii.qfx",
+    "bank": "Chase",
+    "case": "non-ascii-byte-declared-usascii",
+    "encoding": "cp1252",
+    "sources": [
+      160,
+      179
+    ],
+    "quoted": [
+      "SQ *ECCO UN POCO ¦ NATURA",
+      "<MEMO>TRANSFERENCIA PIX DES: Laboratório Hacker De 18/10"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/etrade/charset-none-with-encoding-usascii.ofx",
+    "bank": "E*Trade",
+    "case": "charset-none-with-encoding-usascii",
+    "encoding": "utf-8",
+    "sources": [
+      171,
+      154,
+      163
+    ],
+    "quoted": [
+      "ENCODING:USASCII\nCHARSET:NONE"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/hsbc-brasil/dtstart-ddmmyy.ofx",
+    "bank": "HSBC Brasil",
+    "case": "dtstart-ddmmyy",
+    "encoding": "utf-8",
+    "sources": [
+      58
+    ],
+    "quoted": [
+      "BANKTRANLIST :: DTSTART tag is in %d%m%y format"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/lcl/check-without-payee.ofx",
+    "bank": "LCL",
+    "case": "check-without-payee",
+    "encoding": "utf-8",
+    "sources": [
+      162
+    ],
+    "quoted": [
+      "<TRNTYPE>CHECK\n<DTPOSTED>20190221\n<TRNAMT>-19.87"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/onpoint-community-credit-union/self-closing-memo-tag.ofx",
+    "bank": "OnPoint Community Credit Union",
+    "case": "self-closing-memo-tag",
+    "encoding": "utf-8",
+    "sources": [
+      167,
+      81
+    ],
+    "quoted": [
+      "tokens that look like <MEMO/>",
+      "<FI><ORG/><FID/></FI>"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/charset-8859-1-without-iso-prefix.qfx",
+    "bank": "unnamed",
+    "case": "charset-8859-1-without-iso-prefix",
+    "encoding": "utf-8",
+    "sources": [
+      148
+    ],
+    "quoted": [
+      "ENCODING:USASCII\nCHARSET:8859-1"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/character-outside-latin1.ofx",
+    "bank": "unnamed",
+    "case": "character-outside-latin1",
+    "encoding": "utf-8",
+    "sources": [
+      169
+    ],
+    "quoted": [
+      "ENCODING:UTF-8\nCHARSET:NONE",
+      "<NAME>Finančna uprava RS</NAME>"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/xml-declaration-ofx-2.ofx",
+    "bank": "unnamed",
+    "case": "xml-declaration-ofx-2",
+    "encoding": "utf-8",
+    "sources": [
+      133
+    ],
+    "quoted": [
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+      "<?OFX OFXHEADER=\"200\" VERSION=\"202\" SECURITY=\"NONE\" OLDFILEUID=\"NONE\" NEWFILEUID=\"NONE\"?>"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/blank-line-before-header.ofx",
+    "bank": "unnamed",
+    "case": "blank-line-before-header",
+    "encoding": "utf-8",
+    "sources": [
+      161,
+      179
+    ],
+    "quoted": [
+      "My bank OFX files start with empty lines",
+      "(blank line at start of file)"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/amount-comma-decimal.ofx",
+    "bank": "unnamed",
+    "case": "amount-comma-decimal",
+    "encoding": "utf-8",
+    "sources": [
+      179
+    ],
+    "quoted": [
+      "<TRNAMT>2000,00",
+      "<BALAMT>2000,00"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/amount-plus-sign-and-space.ofx",
+    "bank": "unnamed",
+    "case": "amount-plus-sign-and-space",
+    "encoding": "utf-8",
+    "sources": [
+      173
+    ],
+    "quoted": [
+      "<TRNAMT>+1 006,60",
+      "<TRNAMT>+1,006.60"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/zero-date.ofx",
+    "bank": "unnamed",
+    "case": "zero-date",
+    "encoding": "utf-8",
+    "sources": [
+      179
+    ],
+    "quoted": [
+      "<DTASOF>00000000"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/chknum-instead-of-checknum.ofx",
+    "bank": "unnamed",
+    "case": "chknum-instead-of-checknum",
+    "encoding": "utf-8",
+    "sources": [
+      173
+    ],
+    "quoted": [
+      "<CHKNUM>1932"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/empty-tags-curdef-fitid-name.ofx",
+    "bank": "unnamed",
+    "case": "empty-tags-curdef-fitid-name",
+    "encoding": "utf-8",
+    "sources": [
+      81
+    ],
+    "quoted": [
+      "<FITID></FITID>",
+      "<NAME></NAME>",
+      "account.curdef = act_curdef.contents[0].strip()\nIndexError: list index out of range"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/mixed-case-trntype.ofx",
+    "bank": "unnamed",
+    "case": "mixed-case-trntype",
+    "encoding": "utf-8",
+    "sources": [
+      81
+    ],
+    "quoted": [
+      "<TRNTYPE>Credit</TRNTYPE>"
+    ]
+  },
+  {
+    "fixture": "corpus/banks/unnamed-bank/tags-outside-spec.ofx",
+    "bank": "unnamed",
+    "case": "tags-outside-spec",
+    "encoding": "utf-8",
+    "sources": [
+      81
+    ],
+    "quoted": [
+      "<VALUEDATE>20180801</VALUEDATE>",
+      "<TRANSACTIONSPLIT>No</TRANSACTIONSPLIT>",
+      "<CATEGORY>Uncategorised</CATEGOR",
+      "<ACCTBAL>-400.52</ACCTBAL>"
+    ]
+  }
+]
