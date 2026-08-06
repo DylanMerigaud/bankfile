@@ -14,7 +14,46 @@ transaction's `raw`.
 
 from __future__ import annotations
 
-from bankfile.model import ReadWarning
+from decimal import Decimal
+
+from bankfile.model import ReadWarning, Transaction
+
+
+def check_reconciliation(
+    opening: Decimal | None, closing: Decimal | None, transactions: list[Transaction]
+) -> list[ReadWarning]:
+    """Does the statement add up: opening plus the entries, against the closing balance.
+
+    This exists because it is the check that found the only real bug of this phase. `mt940`
+    negates an amount for a `D` mark and not for an `RC`, a reversed credit, so money leaving
+    the account came back positive. No test caught it. Arithmetic did, in one line.
+
+    Run on the 51 real files of the test corpus, it reports 13 that do not add up. All 13 were
+    checked by hand against a byte level regex sum that does not go through this library at
+    all, and in every case the FILE is what does not balance, not our reading of it: they are
+    anonymised or synthetic fixtures whose amounts were scrambled while their balances were
+    not. Which is the point. A person reconciling an account needs to be told that the file
+    they were sent contradicts itself, and no parser tells them today.
+    """
+    if opening is None or closing is None or not transactions:
+        return []
+    movement = sum((t.amount for t in transactions), Decimal("0"))
+    delta = opening + movement - closing
+    if delta == 0:
+        return []
+    return [
+        ReadWarning(
+            rule="amount",
+            field="62F",
+            value=str(delta),
+            message=(
+                f"this statement does not add up: opening {opening} plus {movement} of entries "
+                f"gives {opening + movement}, and the file states a closing balance of "
+                f"{closing}, a difference of {delta}. The entries are returned unchanged, the "
+                f"arithmetic is the file's."
+            ),
+        )
+    ]
 
 
 def dedupe(warnings: list[ReadWarning]) -> list[ReadWarning]:

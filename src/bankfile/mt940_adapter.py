@@ -73,7 +73,7 @@ from mt940.models import Transactions
 from mt940.processors import date_fixup_pre_processor
 
 from bankfile.model import ReadWarning, Source, Statement, Transaction
-from bankfile.report import dedupe
+from bankfile.report import check_reconciliation, dedupe
 from bankfile.transaction_types import normalise as normalise_type
 
 _Tags = dict[int | str, mt940.tags.Tag] | None
@@ -187,6 +187,8 @@ def read_mt940(data: bytes, *, path: str | None = None) -> Statement:
                 message="no MT940 tag was recognised, nothing in this input is a statement",
             )
         )
+
+    warnings += check_reconciliation(opening, closing, transactions)
 
     return Statement(
         source=Source(format="MT940", path=path, encoding=encoding),
