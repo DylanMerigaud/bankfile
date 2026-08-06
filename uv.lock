@@ -50,6 +50,9 @@ wheels = [
 name = "bankfile"
 version = "0.0.1"
 source = { editable = "." }
+dependencies = [
+    { name = "mt-940" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -60,6 +63,7 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "mt-940", specifier = ">=4.30" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -287,6 +291,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0c/99/6203ce619dee940d6bfbe099ec3fe4be00a68e9d60f70abf906cf124fe66/librt-0.13.0-cp314-cp314t-win32.whl", hash = "sha256:5fdcf34f86de8fb66d7dc7589f96ba91c4aa46671200d400e6fd6f109a483f18", size = 104357 },
     { url = "https://files.pythonhosted.org/packages/52/dd/843b6314087c41657c7036d7914d8f294bdf9b580aa8513ea0588c8e9a3d/librt-0.13.0-cp314-cp314t-win_amd64.whl", hash = "sha256:260c33e92263fa629b4f6d3c51967a1c2158fe6c33237aaa3ebeac586b085259", size = 126998 },
     { url = "https://files.pythonhosted.org/packages/5f/5d/3dcec2884ba1b0806d1408612555c38dd5d68e90156b59f75f6e36435c3a/librt-0.13.0-cp314-cp314t-win_arm64.whl", hash = "sha256:2f281549a4c52ac7bb97997f14353f8bd0e53a34ca0dad1c905cfd0b4a58ae99", size = 110771 },
+]
+
+[[package]]
+name = "mt-940"
+version = "5.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/64/39abc6f3967663760943afd13e46908cf422299e784cb012127031987140/mt_940-5.0.0.tar.gz", hash = "sha256:82d914988837a95bae21e772c74fb925b716735723f718c3ddd93cf3ad2b0f3a", size = 26138 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/9c/b9f58c0cc2058476c75d5106fbf0b76b894346038abdbbb12d8fd4ec129f/mt_940-5.0.0-py3-none-any.whl", hash = "sha256:731ad50dd74bd9b4c74c7baab62dead534e30867ef00217841060dd7a7e3201a", size = 29133 },
 ]
 
 [[package]]

@@ -4,22 +4,78 @@
   "title": "Normalised bank transaction",
   "description": "THE SCHEMA IS DATA, NOT CODE, and that is deliberate. The same corpus has to serve the Python implementation and the TypeScript implementation without either one becoming the reference: two implementations that each carry their own truth drift apart, and that is how this kind of project dies. The measurement behind this file (2026-08-05): on the same notion of a transaction, the mt940 library returns 37 fields and ofxparse returns 10, with only THREE fields in common (amount, date, identifier). The counterparty is called applicant_name on one side and payee on the other.",
   "type": "object",
-  "required": ["date", "amount", "currency", "raw"],
+  "required": [
+    "date",
+    "amount",
+    "currency",
+    "raw"
+  ],
   "additionalProperties": false,
   "properties": {
-    "date": { "type": "string", "format": "date", "description": "Value date." },
-    "booking_date": { "type": ["string", "null"], "format": "date" },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Value date."
+    },
+    "booking_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
     "amount": {
       "type": "string",
       "description": "DECIMAL AS A STRING, never a float. A cent lost inside a binary64 is a false reconciliation, and the source format already carries exact decimals."
     },
-    "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
-    "counterparty_name": { "type": ["string", "null"] },
-    "counterparty_account": { "type": ["string", "null"] },
-    "reference": { "type": ["string", "null"] },
-    "purpose": { "type": ["string", "null"] },
-    "bank_reference": { "type": ["string", "null"] },
-    "type_code": { "type": ["string", "null"] },
+    "currency": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 3
+    },
+    "counterparty_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "counterparty_account": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "purpose": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "bank_reference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "type_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "check_number": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The cheque number. It earns a field of its own because the corpus has a case where it is the ONLY identifying content of the transaction (LCL, a CHECK with no NAME and no MEMO), and because two upstream sources spell its tag differently, CHECKNUM and CHKNUM. Kept as a string: leading zeros are significant."
+    },
     "raw": {
       "type": "object",
       "description": "ALWAYS present. The fields specific to the source format, as they are. A normalisation that throws away the original forces you to re-parse the file as soon as a question falls outside the schema, and nobody keeps the file."

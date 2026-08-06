@@ -17,7 +17,14 @@ classifiers = [
   "Topic :: Office/Business :: Financial :: Accounting",
   "Typing :: Typed",
 ]
-dependencies = []
+dependencies = [
+  # wolph/mt940, BSD licensed and maintained. NOT rewritten, on purpose: it already structures
+  # the :86: field, including reassembling a purpose across ?2x subfields AND across physical
+  # line breaks. That was verified by running it on a real German file, after reading its regex
+  # and concluding the opposite. Reading code and inferring behaviour is the mistake this
+  # project keeps paying for. Its floor is Python 3.10, same as ours.
+  "mt-940>=4.30",
+]
 
 [project.urls]
 Homepage = "https://github.com/DylanMerigaud/bankfile"

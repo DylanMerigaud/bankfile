@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/DylanMerigaud/bankfile/corpus/schema/statement.schema.json",
+  "title": "Normalised bank statement",
+  "description": "The document the CLI returns, and the level at which the promise of this project is testable: the SAME JSON for an MT940 and an OFX of the same account. Two properties are excluded from that comparison by design, and only two: `source`, which is provenance, and each transaction's `raw`, which is by definition the fields of the origin format. Everything else has to match, otherwise there is no unification, only two parsers in a trench coat.",
+  "type": "object",
+  "required": ["account", "currency", "transactions", "warnings", "source"],
+  "additionalProperties": false,
+  "properties": {
+    "account": {
+      "type": ["string", "null"],
+      "description": "Account identifier as the file states it. Nullable but always present: a file with no readable account is not a reason to reject the transactions."
+    },
+    "currency": { "type": ["string", "null"], "minLength": 3, "maxLength": 3 },
+    "opening_balance": {
+      "type": ["string", "null"],
+      "description": "DECIMAL AS A STRING, never a float, for the same reason as an amount."
+    },
+    "closing_balance": { "type": ["string", "null"] },
+    "transactions": {
+      "type": "array",
+      "items": { "$ref": "transaction.schema.json" }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "ALWAYS present, empty when the read was clean. This array is the failure doctrine made visible: a file that can be read is never rejected over the value of one field, so everything we could not read has to say so HERE instead of disappearing. The measured case that motivates it: on a file starting with a blank line, ofxparse returns zero headers instead of nine and raises nothing at all.",
+      "items": { "$ref": "#/$defs/warning" }
+    },
+    "source": {
+      "type": "object",
+      "required": ["format"],
+      "additionalProperties": false,
+      "description": "Provenance. Excluded from the cross-format equality test, because it is the one thing that legitimately differs.",
+      "properties": {
+        "format": { "type": "string", "enum": ["MT940", "OFX"] },
+        "path": { "type": ["string", "null"] },
+        "encoding": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "$defs": {
+    "warning": {
+      "type": "object",
+      "required": ["rule", "field", "value", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "rule": {
+          "type": "string",
+          "description": "Which section of corpus/reading-rules.md fired.",
+          "enum": ["encoding", "header", "amount", "date", "tag"]
+        },
+        "field": { "type": ["string", "null"], "description": "Tag or field concerned." },
+        "value": { "type": ["string", "null"], "description": "The raw value, kept verbatim." },
+        "message": { "type": "string" }
+      }
+    }
+  }
+}
