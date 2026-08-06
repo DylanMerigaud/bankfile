@@ -1,10 +1,10 @@
 # bankfile
 
-Un schema pour tous les fichiers de banque: MT940, MT942, CAMT.053, BAI2, OFX/QFX.
+One schema for every bank file: MT940, MT942, CAMT.053, BAI2, OFX/QFX.
 
-Le nom dit `fichier` et non `releve`, et c'est delibere: le jour ou la librairie lit un ordre de
-paiement (`pain.001`) ou un fichier ACH, ce ne sont pas des releves, et un nom qui promet des
-releves se battrait contre son propre perimetre.
+The name says `file` and not `statement`, and that is deliberate: the day the library reads a
+payment order (`pain.001`) or an ACH file, those are not statements, and a name that promises
+statements would fight its own scope.
 
 ## Quickstart
 
@@ -20,61 +20,62 @@ for tx in parse("releve.sta"):
     print(tx.date, tx.amount, tx.counterparty_name)
 ```
 
-Le meme code lit un MT940 allemand et un QFX de Chase, et rend les memes champs.
+The same code reads a German MT940 and a Chase QFX, and returns the same fields.
 
-## Pourquoi ca existe, et ce que ce n'est pas
+## Why this exists, and what it is not
 
-Chaque format a sa librairie, et chaque librairie a son schema. Mesure du 2026-08-05: sur la
-meme notion de transaction, `mt940` rend 37 champs, `ofxparse` en rend 10, et ils n'ont que
-**trois champs en commun** (montant, date, identifiant). La contrepartie s'appelle
-`applicant_name` d'un cote et `payee` de l'autre. Quiconque ingere deux formats ecrit son
-mapping a la main, puis le reecrit au format suivant.
+Every format has its library, and every library has its schema. Measured on 2026-08-05: for the
+same notion of a transaction, `mt940` returns 37 fields, `ofxparse` returns 10, and they have
+only **three fields in common** (amount, date, identifier). The counterparty is called
+`applicant_name` on one side and `payee` on the other. Anyone ingesting two formats writes the
+mapping by hand, then rewrites it for the next format.
 
-**Ce n'est pas un nouveau parseur.** Les bons parseurs existent et on s'appuie dessus quand
-c'est possible. Ce qui manque est la couche au dessus, plus le corpus en dessous.
+**This is not a new parser.** The good parsers exist and we build on them where we can. What is
+missing is the layer above, plus the corpus below.
 
-**Ce n'est pas de l'extraction par modele.** Un releve bancaire a une grammaire publiee: le
-parser avec un modele serait non deterministe, cher au volume et inauditable. Un rapprochement
-bancaire ne peut pas etre probabiliste, et un montant faux mais plausible est le pire echec
-possible en finance. Le modele a sa place ailleurs, voir plus bas.
+**This is not model-based extraction.** A bank statement has a published grammar: parsing it
+with a model would be non deterministic, expensive at volume and unauditable. Bank
+reconciliation cannot be probabilistic, and a wrong but plausible amount is the worst possible
+failure in finance. The model has its place elsewhere, see below.
 
-**Ce n'est pas un service heberge.** Un releve est le fichier le plus sensible d'une entreprise.
-Tout s'execute chez vous, y compris le serveur MCP.
+**This is not a hosted service.** A statement is the most sensitive file a company has.
+Everything runs on your machine, including the MCP server.
 
-## Le corpus est l'actif, pas le code
+## The corpus is the asset, not the code
 
-Un modele ecrit un parseur conforme a la specification en trente secondes, parce que la
-specification est publique. Il ne peut pas savoir que Wells Fargo omet les retours a la ligne
-dans l'en-tete d'un QFX, que Chase ecrit des en-tetes tordus, ou qu'une banque emet `cpNONE`
-comme encodage. Ce sont des faits sur le monde et non sur la norme.
+A model writes a spec-compliant parser in thirty seconds, because the spec is public. It cannot
+know that Wells Fargo omits the line breaks in a QFX header, that Chase writes malformed
+headers, or that a file declaring `CHARSET:NONE` makes ofxparse concatenate `cp` with it and
+look up a codec named `cpNONE`, which does not exist. Those are facts about the world, not about
+the standard.
 
-Les trois exemples sortent d'issues ouvertes et non traitees ailleurs, pas d'une imagination.
+The three examples come from open, unmerged pull requests, not from imagination.
 
-`corpus/` est donc versionne comme une donnee neutre: schema JSON, fixtures par banque, regles
-de deviation. Les implementations Python et TypeScript le consomment sans qu'aucune ne devienne
-la reference. Deux implementations qui portent chacune leur verite divergent.
+So `corpus/` is versioned as neutral data: JSON schema, per-bank fixtures, deviation rules. The
+Python and TypeScript implementations consume it without either one becoming the reference. Two
+implementations each carrying their own truth drift apart.
 
-## Ou le modele sert vraiment
+## Where the model actually helps
 
-Jamais sur le chemin du parsing. Sur trois points, hors ligne, ou il n'y a pas de specification:
+Never on the parsing path. On three points, offline, where there is no specification:
 
-1. Generer une regle de deviation depuis la documentation PDF d'une banque, une fois, puis
-   l'executer en deterministe pour toujours.
-2. Diagnostiquer un fichier qui ne passe pas et proposer la regle manquante.
-3. Lire un releve fourni en PDF, ou il n'y a effectivement aucune grammaire.
+1. Generate a deviation rule from a bank's PDF documentation, once, then run it
+   deterministically forever.
+2. Diagnose a file that fails and propose the missing rule.
+3. Read a statement delivered as a PDF, where there really is no grammar.
 
-## Serveur MCP
+## MCP server
 
-Local, en stdio. Le fichier ne quitte pas la machine. Les outils rendent des tranches filtrees
-et paginees, jamais le fichier entier: un releve de 5000 transactions detruit une fenetre de
-contexte, et c'est la premiere chose qu'une enveloppe naive rate.
+Local, over stdio. The file does not leave the machine. The tools return filtered and paginated
+slices, never the whole file: a statement with 5000 transactions destroys a context window, and
+that is the first thing a naive wrapper gets wrong.
 
-## Contribuer
+## Contributing
 
-Un rapport qui porte un extrait de fichier anonyme vaut plus qu'une correction de code. Voir
-[CONTRIBUTING.md](CONTRIBUTING.md), et le gabarit d'issue "ma banque produit un fichier que la
-librairie ne lit pas".
+A report carrying an anonymised file excerpt is worth more than a code fix. See
+[CONTRIBUTING.md](CONTRIBUTING.md), and the issue template "my bank produces a file the library
+cannot read".
 
-## Licence
+## License
 
 MIT.

@@ -1,9 +1,10 @@
-"""Le modele normalise, MIROIR du schema JSON et jamais sa source.
+"""The normalised model, a MIRROR of the JSON schema and never its source.
 
-`corpus/schema/transaction.schema.json` fait foi. Cette classe le suit, et
-`tests/test_schema_mirror.py` echoue si les deux divergent. L'inverse (le code fait foi, le
-schema le documente) condamnerait l'implementation TypeScript a courir derriere Python, et deux
-implementations qui portent chacune leur verite finissent par diverger en silence.
+`corpus/schema/transaction.schema.json` is authoritative. This class follows it, and
+`tests/test_schema_mirror.py` fails if the two diverge. The reverse (the code is
+authoritative, the schema documents it) would condemn the TypeScript implementation to run
+after Python, and two implementations that each carry their own truth end up diverging in
+silence.
 """
 
 from __future__ import annotations
@@ -16,23 +17,23 @@ from typing import Any
 
 @dataclass(frozen=True, slots=True)
 class Transaction:
-    """Une transaction, quel que soit le format d'origine.
+    """A transaction, whatever the source format.
 
-    Le module `datetime` est importe ENTIER et non `from datetime import date`: le champ
-    s'appelle `date`, donc l'import nu serait masque par lui, et les annotations suivantes
-    (`booking_date: date | None`) designeraient le CHAMP au lieu du type. mypy l'a attrape,
-    Python ne l'aurait jamais signale a l'execution.
+    The `datetime` module is imported WHOLE and not `from datetime import date`: the field is
+    named `date`, so the bare import would be shadowed by it, and the annotations that follow
+    (`booking_date: date | None`) would refer to the FIELD instead of the type. mypy caught it,
+    Python would never have reported it at runtime.
     """
 
     date: datetime.date
-    # DECIMAL, jamais float. Un centime perdu dans un binary64 est un rapprochement faux, et le
-    # fichier d'origine porte deja des decimales exactes: les convertir en flottant detruit une
-    # information qui etait juste.
+    # DECIMAL, never float. A cent lost in a binary64 is a wrong reconciliation, and the source
+    # file already carries exact decimals: converting them to floating point destroys
+    # information that was correct.
     amount: Decimal
     currency: str
-    # TOUJOURS renseigne. Les champs propres au format d'origine, tels quels. Une normalisation
-    # qui jette l'original oblige a re-parser le fichier des qu'une question sort du schema, et
-    # a ce moment-la plus personne n'a le fichier.
+    # ALWAYS filled in. The fields specific to the source format, as they are. A normalisation
+    # that throws the original away forces a re-parse of the file as soon as a question falls
+    # outside the schema, and by then nobody has the file any more.
     raw: dict[str, Any]
     booking_date: datetime.date | None = None
     counterparty_name: str | None = None
@@ -44,13 +45,13 @@ class Transaction:
 
     def __post_init__(self) -> None:
         if len(self.currency) != 3:
-            msg = f"devise ISO 4217 attendue sur 3 lettres, recu {self.currency!r}"
+            msg = f"expected a 3-letter ISO 4217 currency, got {self.currency!r}"
             raise ValueError(msg)
 
 
 @dataclass(frozen=True, slots=True)
 class Statement:
-    """Un releve: un compte, une periode, des transactions."""
+    """A statement: one account, one period, some transactions."""
 
     account: str
     transactions: list[Transaction] = field(default_factory=list)

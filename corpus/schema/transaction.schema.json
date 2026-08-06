@@ -1,17 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/DylanMerigaud/bankfile/corpus/schema/transaction.schema.json",
-  "title": "Transaction bancaire normalisee",
-  "description": "LE SCHEMA EST UNE DONNEE, PAS DU CODE, et c'est delibere. Le meme corpus doit servir l'implementation Python et l'implementation TypeScript sans qu'aucune ne devienne la reference: deux implementations qui portent chacune leur verite divergent, et c'est ainsi que ce genre de projet meurt. Mesure qui motive ce fichier (2026-08-05): sur la meme notion de transaction, la librairie mt940 rend 37 champs et ofxparse en rend 10, avec seulement TROIS champs en commun (montant, date, identifiant). La contrepartie s'appelle applicant_name d'un cote et payee de l'autre.",
+  "title": "Normalised bank transaction",
+  "description": "THE SCHEMA IS DATA, NOT CODE, and that is deliberate. The same corpus has to serve the Python implementation and the TypeScript implementation without either one becoming the reference: two implementations that each carry their own truth drift apart, and that is how this kind of project dies. The measurement behind this file (2026-08-05): on the same notion of a transaction, the mt940 library returns 37 fields and ofxparse returns 10, with only THREE fields in common (amount, date, identifier). The counterparty is called applicant_name on one side and payee on the other.",
   "type": "object",
   "required": ["date", "amount", "currency", "raw"],
   "additionalProperties": false,
   "properties": {
-    "date": { "type": "string", "format": "date", "description": "Date de valeur." },
+    "date": { "type": "string", "format": "date", "description": "Value date." },
     "booking_date": { "type": ["string", "null"], "format": "date" },
     "amount": {
       "type": "string",
-      "description": "DECIMAL EN CHAINE, jamais un flottant. Un centime perdu dans un binary64 est un rapprochement faux, et le format d'origine porte deja des decimales exactes."
+      "description": "DECIMAL AS A STRING, never a float. A cent lost inside a binary64 is a false reconciliation, and the source format already carries exact decimals."
     },
     "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
     "counterparty_name": { "type": ["string", "null"] },
@@ -22,7 +22,7 @@
     "type_code": { "type": ["string", "null"] },
     "raw": {
       "type": "object",
-      "description": "TOUJOURS present. Les champs propres au format d'origine, tels quels. Une normalisation qui jette l'original oblige a re-parser le fichier des qu'une question sort du schema, et personne ne garde le fichier."
+      "description": "ALWAYS present. The fields specific to the source format, as they are. A normalisation that throws away the original forces you to re-parse the file as soon as a question falls outside the schema, and nobody keeps the file."
     }
   }
 }

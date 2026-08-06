@@ -1,4 +1,4 @@
-"""Les invariants du modele, ceux dont la violation produit un resultat FAUX et non une erreur."""
+"""The model invariants, the ones whose violation produces a WRONG result and not an error."""
 
 from __future__ import annotations
 
@@ -21,24 +21,24 @@ def tx(**kw: object) -> Transaction:
     return Transaction(**base)  # type: ignore[arg-type]
 
 
-def test_le_montant_reste_exact() -> None:
-    """Le piege que ce projet doit eviter: 0.1 + 0.2 en flottant ne fait pas 0.3, et un
-    rapprochement bancaire faux de un centime est un rapprochement faux."""
+def test_the_amount_stays_exact() -> None:
+    """The trap this project has to avoid: 0.1 + 0.2 in floating point is not 0.3, and a bank
+    reconciliation that is wrong by one cent is a wrong reconciliation."""
     total = tx(amount=Decimal("0.1")).amount + tx(amount=Decimal("0.2")).amount
     assert total == Decimal("0.3")
-    # Le meme calcul en binary64, pour que la raison du Decimal soit visible et non affirmee.
-    en_flottant = 0.1 + 0.2
-    assert en_flottant != 0.3
-    assert Decimal(str(en_flottant)) != Decimal("0.3")
+    # The same computation in binary64, so the reason for Decimal is visible, not just asserted.
+    in_floating_point = 0.1 + 0.2
+    assert in_floating_point != 0.3
+    assert Decimal(str(in_floating_point)) != Decimal("0.3")
 
 
-def test_une_devise_mal_formee_est_refusee_a_la_construction() -> None:
+def test_a_malformed_currency_is_rejected_at_construction() -> None:
     with pytest.raises(ValueError, match="ISO 4217"):
         tx(currency="EURO")
 
 
-def test_la_transaction_est_immuable() -> None:
-    """Un objet de releve qui se modifie apres coup rend le rapprochement inauditable."""
+def test_the_transaction_is_immutable() -> None:
+    """A statement object that changes after the fact makes the reconciliation unauditable."""
     t = tx()
     with pytest.raises(AttributeError):
         t.amount = Decimal("0")  # type: ignore[misc]

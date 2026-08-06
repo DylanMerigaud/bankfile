@@ -1,8 +1,9 @@
-"""Le modele Python et le schema JSON ne doivent pas diverger.
+"""The Python model and the JSON schema must not diverge.
 
-Le schema fait foi: il sert aussi l'implementation TypeScript a venir. Sans ce test, le code
-Python devient la reference de fait, la version TS court derriere, et les deux portent chacune
-leur verite. C'est ainsi qu'un projet multi-langage meurt, et c'est previsible, donc garde.
+The schema is the authority: it also serves the TypeScript implementation to come. Without this
+test, the Python code becomes the de facto reference, the TS version runs behind, and each of the
+two carries its own truth. That is how a multi-language project dies, and it is predictable, so it
+is guarded against.
 """
 
 from __future__ import annotations
@@ -17,27 +18,27 @@ from bankfile.model import Transaction
 SCHEMA = Path(__file__).resolve().parent.parent / "corpus" / "schema" / "transaction.schema.json"
 
 
-def test_les_champs_du_schema_et_du_modele_sont_les_memes() -> None:
+def test_the_schema_fields_and_the_model_fields_are_the_same() -> None:
     schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
-    attendus = set(schema["properties"])
-    presents = {f.name for f in fields(Transaction)}
-    assert presents == attendus, (
-        f"manquants dans le modele: {sorted(attendus - presents)}; "
-        f"absents du schema: {sorted(presents - attendus)}"
+    expected = set(schema["properties"])
+    present = {f.name for f in fields(Transaction)}
+    assert present == expected, (
+        f"missing from the model: {sorted(expected - present)}; "
+        f"absent from the schema: {sorted(present - expected)}"
     )
 
 
-def test_les_champs_obligatoires_du_schema_n_ont_pas_de_defaut() -> None:
-    """Un champ requis par le schema mais optionnel dans le modele laisse construire un objet
-    invalide sans que rien ne le dise."""
-    requis = set(json.loads(SCHEMA.read_text(encoding="utf-8"))["required"])
+def test_the_required_schema_fields_have_no_default() -> None:
+    """A field required by the schema but optional in the model lets an invalid object be built
+    without anything saying so."""
+    required = set(json.loads(SCHEMA.read_text(encoding="utf-8"))["required"])
     for f in fields(Transaction):
-        if f.name in requis:
+        if f.name in required:
             assert f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING, (
-                f"{f.name} est requis par le schema mais porte un defaut dans le modele"
+                f"{f.name} is required by the schema but carries a default in the model"
             )
 
 
-def test_le_schema_refuse_les_champs_inconnus() -> None:
-    """`additionalProperties: false` est ce qui rend le miroir verifiable des deux cotes."""
+def test_the_schema_rejects_unknown_fields() -> None:
+    """`additionalProperties: false` is what makes the mirror verifiable on both sides."""
     assert json.loads(SCHEMA.read_text(encoding="utf-8"))["additionalProperties"] is False

@@ -1,4 +1,4 @@
-"""bankfile: un schema pour tous les formats de releve bancaire."""
+"""bankfile: one schema for every bank statement format."""
 
 from bankfile.model import Transaction
 

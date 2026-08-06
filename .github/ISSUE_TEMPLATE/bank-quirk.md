@@ -1,28 +1,28 @@
 ---
-name: Ma banque produit un fichier que la librairie ne lit pas
-about: Le seul rapport qui construit l'actif de ce projet
+name: My bank produces a file the library cannot read
+about: The only report that builds this project's asset
 labels: bank-quirk
 ---
 
 <!--
-CE GABARIT EST LE COEUR DU PROJET, pas une formalite. Le code d'un parseur se regenere en
-quelques minutes: une specification publique suffit. Ce qui ne se regenere pas, c'est la
-connaissance de la facon dont VOTRE banque s'ecarte de cette specification. Elle n'existe
-nulle part ailleurs que dans un fichier reel.
+THIS TEMPLATE IS THE HEART OF THE PROJECT, not a formality. A parser's code can be regenerated
+in a few minutes: a public specification is enough. What cannot be regenerated is the
+knowledge of how YOUR bank deviates from that specification. It exists nowhere else than in a
+real file.
 
-ANONYMISEZ AVANT DE COLLER: remplacez les montants, les noms et les numeros de compte. La
-structure est ce qui nous interesse, jamais vos donnees.
+ANONYMISE BEFORE PASTING: replace the amounts, the names and the account numbers. The
+structure is what interests us, never your data.
 -->
 
-**Banque et pays**
+**Bank and country**
 
 **Format** (MT940, MT942, CAMT.053, BAI2, OFX, QFX)
 
-**Extrait anonymise, la ligne ou la structure qui pose probleme**
+**Anonymised excerpt, the line or the structure that causes the problem**
 
 ```
 ```
 
-**Ce que la librairie rend**
+**What the library returns**
 
-**Ce qu'elle devrait rendre**
+**What it should return**

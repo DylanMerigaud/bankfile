@@ -1,16 +1,16 @@
-# Securite
+# Security
 
-## Signaler
+## Reporting
 
-Ouvrez un avis de securite prive via l'onglet Security de ce depot. Pas d'issue publique.
+Open a private security advisory through the Security tab of this repository. No public issue.
 
-## Ce qui compte particulierement ici
+## What matters especially here
 
-Ce projet lit des fichiers bancaires. Deux categories priment:
+This project reads bank files. Two categories come first:
 
-**Une fuite de donnees dans le depot.** Un fichier de corpus insuffisamment anonymise est une
-faille, meme s'il n'y a pas de bug. Signalez-le comme telle.
+**A data leak in the repository.** A corpus file that is not anonymised enough is a
+vulnerability, even if there is no bug. Report it as one.
 
-**Un parseur qui rend un montant faux sans erreur.** En finance, un resultat faux mais plausible
-est pire qu'un plantage: il entre dans un rapprochement et personne ne le voit. Un ecart
-silencieux entre le fichier et la sortie est traite comme une faille, pas comme un bug.
+**A parser that returns a wrong amount without an error.** In finance, a wrong but plausible
+result is worse than a crash: it enters a reconciliation and nobody sees it. A silent gap
+between the file and the output is treated as a vulnerability, not as a bug.

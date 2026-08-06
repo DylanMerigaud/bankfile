@@ -1,21 +1,21 @@
-# Contribuer
+# Contributing
 
-## Ce qui aide le plus
+## What helps most
 
-Un extrait anonymise d'un fichier que la librairie lit mal. C'est ce qui construit l'actif du
-projet, et c'est la seule chose qu'aucun modele ne peut produire a votre place: la
-specification est publique, la facon dont votre banque s'en ecarte ne l'est pas.
+An anonymised excerpt of a file the library reads badly. That is what builds the project's
+asset, and it is the one thing no model can produce for you: the specification is public, the
+way your bank departs from it is not.
 
-**Anonymisez toujours**: remplacez montants, noms et numeros de compte. La structure est ce qui
-compte, jamais le contenu.
+**Always anonymise**: replace amounts, names and account numbers. The structure is what
+counts, never the content.
 
-## Une correction de parsing sans fixture reviendra
+## A parsing fix without a fixture will come back
 
-Toute correction porte son fichier sous `corpus/banks/`, avec le `.md` qui dit la banque, le
-format et la deviation. Sinon la regression revient au premier refactor, et le corpus, qui est
-l'actif, n'a pas grandi.
+Every fix carries its file under `corpus/banks/`, with the `.md` that states the bank, the
+format and the deviation. Otherwise the regression comes back at the first refactor, and the
+corpus, which is the asset, has not grown.
 
-## Avant d'ouvrir une PR
+## Before opening a PR
 
 ```bash
 uv sync --all-groups
@@ -24,6 +24,6 @@ uv run mypy
 uv run pytest
 ```
 
-Le lint est strict et ses exemptions sont ecrites dans `pyproject.toml` avec leur raison. En
-ajouter une sans raison n'est pas une exemption, c'est une regle qu'on eteint parce qu'elle
-derange.
+The lint is strict and its exemptions are written in `pyproject.toml` with their reason.
+Adding one without a reason is not an exemption, it is a rule switched off because it gets in
+the way.
