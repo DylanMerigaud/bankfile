@@ -70,6 +70,174 @@ def test_every_statement_line_in_the_file_becomes_a_transaction(fixture: Path) -
     assert len(read_mt940(fixture.read_bytes()).transactions) == expected
 
 
+@pytest.mark.parametrize("fixture", CORPUS, ids=lambda p: str(p.relative_to(FIXTURES)))
+def test_every_entry_carries_the_sign_of_its_debit_credit_mark(fixture: Path) -> None:
+    """SWIFT field `:61:` subfield 3 is the sign of the entry, and it has FOUR values, not two:
+    `C` credit, `D` debit, `RC` the reversal of a credit and `RD` the reversal of a debit. A
+    reversed credit takes money out, so it is negative.
+
+    The marks are read from the file, one per statement line, and compared to the amounts in
+    order. `mt940` negates on `D` alone, which is why this test is written against the bytes and
+    not against the parser: read from the parser it would have agreed with the bug.
+    """
+    text = fixture.read_bytes().decode("iso-8859-1")
+    marks = re.findall(r"(?m)^:\n?61:\d{6}(?:\d{4}|\s{4})?(R?[DC])", text)
+    result = read_mt940(fixture.read_bytes())
+
+    assert len(marks) == len(result.transactions)
+    for mark, transaction in zip(marks, result.transactions, strict=True):
+        if transaction.amount == 0:
+            continue
+        assert (transaction.amount < 0) == (mark in {"D", "RC"}), (
+            f"{mark} entry of {transaction.amount} in {fixture.name}"
+        )
+
+
+def test_a_reversed_credit_takes_money_out_of_the_account() -> None:
+    """betterplace/sepa_mt9401.sta, first block. The file settles this by arithmetic, not by
+    quoting the standard: it opens at -1234718,36 and closes at -1237628,23, its six other
+    entries sum to -2705,04, and the `RC` line of 204,88 only closes the gap if it is NEGATIVE.
+
+    `mt940` returns it positive, because it negates on `D` alone. Taken as it comes, the account
+    is out by twice the entry, which is precisely a wrong but plausible amount: nothing in the
+    output looks odd, and the reconciliation is short 409,76.
+    """
+    result = load("betterplace/sepa_mt9401.sta")
+
+    reversals = [t for t in result.transactions if t.raw["status"] == "RC"]
+    assert [t.amount for t in reversals] == [Decimal("-204.88"), Decimal("-204.88")]
+    # The parser's own view is not rewritten, it is kept next to ours: `raw` is the origin
+    # format as it was read, and `status` is what lets a caller check our reading.
+    assert reversals[0].raw["amount"] == "204.88 EUR"
+
+    opening, closing = Decimal("-1234718.36"), Decimal("-1237628.23")
+    block = result.transactions[:7]
+    assert opening + sum(t.amount for t in block) == closing
+
+
+def test_a_date_the_calendar_refuses_is_moved_and_says_so() -> None:
+    """self-provided/february_30.sta, `:61:1602300301DR6,00N024NONREF`: the file dates the entry
+    30 February 2016. The parser moves it to the 29th, silently. Moving it is right, the entry
+    is sound and the model has no null date; moving it in silence is not, because the value date
+    is what a reconciliation matches on.
+    """
+    result = load("self-provided/february_30.sta")
+
+    first = result.transactions[0]
+    assert first.date == datetime.date(2016, 2, 29)
+    assert first.amount == Decimal("-6.00")
+    # The day the file stated survives in the raw fields, so nothing has to be re-read.
+    assert first.raw["impossible_value_date"] == "160230"
+
+    warnings = [w for w in result.warnings if w.rule == "date"]
+    assert len(warnings) == 1
+    assert warnings[0].field == "date"
+    assert warnings[0].value == "160230"
+    assert "February does not have" in warnings[0].message
+
+
+def test_a_date_the_calendar_accepts_is_never_flagged() -> None:
+    """The guard above must fire on the anomaly and on nothing else: a 28 February in a
+    non-leap year is an ordinary date and a report full of ordinary dates is a report nobody
+    reads."""
+    result = read_mt940(b":20:X\n:25:11111111\n:60F:C110101EUR100,00\n:61:110228D1,00NTRFX\n")
+
+    assert result.transactions[0].date == datetime.date(2011, 2, 28)
+    assert [w for w in result.warnings if w.rule == "date"] == []
+    assert "impossible_value_date" not in result.transactions[0].raw
+
+
+def test_a_statement_wrapped_after_its_first_colon_still_opens_a_block() -> None:
+    """`:\\n20:` is the same tag as `:20:`: the newline after the first colon is part of the tag
+    syntax and banks use it (self-provided/sparkassen.sta wraps `:86:` that way).
+
+    Missed, the two statements merge into one block, the second `:25:` overwrites the first, and
+    the file reports ONE account with the opening balance of one and the closing balance of the
+    other. Every number in that statement is plausible and the account it describes does not
+    exist.
+    """
+    data = (
+        b":20:FIRST\n:25:11111111\n:60F:C110101EUR100,00\n"
+        b":61:110101D10,00NTRFX\n:62F:C110102EUR90,00\n"
+        b":\n20:SECOND\n:25:22222222\n:60F:C110201EUR500,00\n"
+        b":61:110201D20,00NTRFY\n:62F:C110202EUR480,00\n"
+    )
+
+    result = read_mt940(data)
+
+    assert len(result.transactions) == 2
+    assert result.account is None
+    assert result.opening_balance is None
+    assert result.closing_balance is None
+    accounts = [w for w in result.warnings if w.field == "account_identification"]
+    assert len(accounts) == 1
+    assert accounts[0].value == "11111111, 22222222"
+
+
+def test_entries_before_the_first_reference_are_kept() -> None:
+    """Nine corpus files open on something that is not a tag (a SWIFT envelope, a bank header),
+    and dropping that is right. Dropping a `:61:` line that sits there is not: it is a movement,
+    and the file would come back short with nothing said about it.
+    """
+    data = (
+        b"HEADER LINE\n:25:99999999\n:61:110101C5,00NTRFEARLY\n"
+        b":20:REF\n:25:11111111\n:60F:C110101EUR100,00\n:61:110101D10,00NTRFLATE\n"
+    )
+
+    result = read_mt940(data)
+
+    assert [t.amount for t in result.transactions] == [Decimal("5.00"), Decimal("-10.00")]
+
+
+def test_two_blocks_lost_for_the_same_reason_are_two_warnings() -> None:
+    """Warnings are collapsed on their content, which is what keeps 77 identical type-code lines
+    from burying the report. Applied to a lost block it would hide half the loss, so the block's
+    own reference and the number of entries it took with it are part of the warning.
+    """
+    data = (
+        b":20:BAD-ONE\n:25:11111111\n:61:181330D1,00NTRF\n:61:181330D2,00NTRF\n\n"
+        b":20:BAD-TWO\n:25:11111111\n:61:181330D3,00NTRF\n\n"
+        b":20:GOOD\n:25:11111111\n:60F:C110101EUR1,00\n:61:110101D4,00NTRF\n"
+    )
+
+    result = read_mt940(data)
+
+    lost = [w for w in result.warnings if "could not be read" in w.message]
+    assert [w.value for w in lost] == ["BAD-ONE", "BAD-TWO"]
+    assert "2 statement lines lost" in lost[0].message
+    assert "1 statement line lost" in lost[1].message
+    assert len(result.transactions) == 1
+
+
+def test_a_continuation_balance_is_used_and_named() -> None:
+    """A page of a longer statement carries `:60M:`/`:62M:` instead of `:60F:`/`:62F:`. The
+    figures are real, so reporting null would lose them; they are not the statement's own
+    opening and closing, so using them without a word would overstate what the file said.
+    """
+    data = (
+        b":20:PAGE2\n:25:11111111\n:60M:C110101EUR100,00\n"
+        b":61:110101D10,00NTRFX\n:62M:C110102EUR90,00\n"
+    )
+
+    result = read_mt940(data)
+
+    assert result.opening_balance == Decimal("100.00")
+    assert result.closing_balance == Decimal("90.00")
+    tags = {w.field for w in result.warnings if w.rule == "tag" and "continuation" in w.message}
+    assert tags == {"intermediate_opening_balance", "intermediate_closing_balance"}
+
+
+def test_a_final_balance_anywhere_in_the_file_beats_a_continuation_one() -> None:
+    """jejik/postfinance.sta: the first block closes on `:62M:` and the second opens on `:60M:`,
+    so the statement's own two balances sit in two different blocks. Both are `F` tags, and
+    neither is reported as a continuation."""
+    result = load("jejik/postfinance.sta")
+
+    assert result.opening_balance == Decimal("0")
+    assert result.closing_balance == Decimal("159.6")
+    assert [w for w in result.warnings if "continuation" in w.message] == []
+
+
 def test_the_corpus_covers_more_than_twenty_files_from_different_banks() -> None:
     assert len(CORPUS) >= 20
     assert len({p.parent.name for p in CORPUS}) >= 8

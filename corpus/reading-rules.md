@@ -92,8 +92,14 @@ In order, on the raw string:
 ## 5. Dates
 
 - Eight digits or more: `YYYYMMDD`, the rest being time and zone.
-- Exactly six digits: ambiguous. `DDMMYY` is attested (HSBC Brasil), `YYMMDD` is not. Read it
-  as `DDMMYY` and WARN, because a two-digit year is never certain.
+- Exactly six digits: it depends on the format, and conflating the two was a mistake in the
+  first version of this document.
+  - In **MT940**, six digits IS the format. SWIFT fixes the value date of `:61:` as `6!n`
+    `YYMMDD`, so reading `110722` as 22 July 2011 is not a guess and must NOT warn. Warning on
+    every date of every MT940 file would bury the warnings that mean something.
+  - In **OFX**, eight digits are the norm and six are an anomaly. `DDMMYY` is attested there
+    (HSBC Brasil, ofxparse #58) and `YYMMDD` is not, so read `DDMMYY` and WARN: a two-digit
+    year in a format that does not ask for one is never certain.
 - All zeros: date absent. Never the epoch, never today.
 - Any other length, or empty: date absent, with a warning.
 

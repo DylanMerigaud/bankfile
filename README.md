@@ -6,21 +6,32 @@ The name says `file` and not `statement`, and that is deliberate: the day the li
 payment order (`pain.001`) or an ACH file, those are not statements, and a name that promises
 statements would fight its own scope.
 
+**Reads today: MT940 and OFX/QFX** (OFX 1.x SGML and OFX 2.x XML). MT942, CAMT.053 and BAI2
+are the next formats, and they are not written yet. This list is the honest one, not the
+roadmap.
+
 ## Quickstart
 
 ```bash
 pip install bankfile
-bankfile releve.sta --json
+bankfile statement.sta --json
 ```
 
 ```python
 from bankfile import parse
 
-for tx in parse("releve.sta"):
-    print(tx.date, tx.amount, tx.counterparty_name)
+statement = parse("statement.sta")
+for transaction in statement.transactions:
+    print(transaction.date, transaction.amount, transaction.counterparty_name)
+
+# Nothing we could not read is dropped in silence. It is all in here.
+for warning in statement.warnings:
+    print(warning.rule, warning.field, warning.message)
 ```
 
-The same code reads a German MT940 and a Chase QFX, and returns the same fields.
+The same code reads a German MT940 and a Chase QFX and returns the same fields. Not "similar
+fields": the test that gates this project compares the two documents and fails on any
+difference outside provenance and the origin-format passthrough.
 
 ## Why this exists, and what it is not
 

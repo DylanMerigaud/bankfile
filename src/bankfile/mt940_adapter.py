@@ -8,8 +8,23 @@ gets wrong first.
 What this module owns is the mapping, and the mapping is where the value is: the two models
 agree on almost nothing. `entry_date` is our booking date, an amount is an object carrying its
 own currency, a transaction knows its statement only through a back-reference, and the raw data
-is full of types `json.dumps` refuses. Four decisions worth naming, the first three of them the
-failure doctrine of `corpus/reading-rules.md` section 0 applied to a real corpus:
+is full of types `json.dumps` refuses. It also means auditing what the parser decided on its
+own, twice measured against a real file:
+
+- the sign of a REVERSAL. SWIFT field `:61:` marks an entry `C`, `D`, `RC` (reversal of a
+  credit) or `RD` (reversal of a debit); `mt940` negates the amount for `D` only, so a reversed
+  credit comes back positive when it took money OUT. `betterplace/sepa_mt9401.sta` proves it by
+  arithmetic: the block opens at -1234718,36 and closes at -1237628,23, and the sum of its
+  entries only lands there if the `RC` line of 204,88 is negative. The sign is therefore taken
+  from the mark and not from the parser.
+- a date the file wrote and the calendar refuses. `self-provided/february_30.sta` dates an entry
+  30 February, and `mt940` silently moves it to the 29th. We keep the moved date, because the
+  entry is otherwise sound and the model has no null date, but the day the file actually stated
+  is put back into `raw` and a `date` warning names it. A date quietly moved by one day is the
+  wrong but plausible value of section 0, and it must never reach a reconciliation unannounced.
+
+Four more decisions, the first three of them the failure doctrine of
+`corpus/reading-rules.md` section 0 applied to a real corpus:
 
 - A file holding several accounts (six of the 54 corpus files do) cannot become one statement.
   The entries are kept, the account and both balances go null and say why. An opening balance
@@ -26,24 +41,45 @@ failure doctrine of `corpus/reading-rules.md` section 0 applied to a real corpus
   verbatim would make the two formats disagree on the same account, which is the one thing this
   phase has to prove they do not. Both raw codes, `id` and the German GVC `transaction_code`,
   stay in `raw`.
+
+Two clauses of the corpus rules are deliberately NOT applied here, and they need arbitration
+rather than silence. Both were written from OFX files, and MT940 is the format where SWIFT
+already fixed what they leave open:
+
+- section 5, "exactly six digits is DDMMYY, and WARN". In MT940 six digits is the FORMAT: the
+  value date of `:61:` is `6!n` YYMMDD. Reading `110722` as 22 July 2011 is not a guess, and
+  warning on every date of every file would bury the warnings that mean something.
+- section 3, "a comma followed by exactly three digits is ambiguous, and WARN". In MT940 the
+  comma is the decimal mark by specification and there is no thousands separator, so `1,500` is
+  one and a half, and a three digit group is what a three decimal currency looks like (BHD,
+  KWD, TND). No corpus file has one, and a warning there would be noise on a correct value.
+
+The rest of the sections IS applied: amounts are Decimal and never float, an empty tag reads as
+absent, an unknown transaction code becomes OTHER with a warning, and the encoding chain is in
+`_decode` with its own disagreement written down.
 """
 
 from __future__ import annotations
 
+import calendar
 import datetime
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from decimal import Decimal
 from typing import Any
 
 import mt940
 from mt940.models import Transactions
+from mt940.processors import date_fixup_pre_processor
 
 from bankfile.model import ReadWarning, Source, Statement, Transaction
 from bankfile.report import dedupe
 from bankfile.transaction_types import normalise as normalise_type
 
 _Tags = dict[int | str, mt940.tags.Tag] | None
+# A parsed tag, as `mt940` hands it to a processor: the keys are tag and bank specific. Spelled
+# out here rather than imported from `mt940._types`, a private module we should not pin to.
+_TagDict = dict[str, Any]
 
 _ASNB = mt940.tags.StatementASNB()
 _GLS = mt940.tags.StatementGLS()
@@ -59,10 +95,36 @@ _VARIANTS: tuple[tuple[str, _Tags], ...] = (
 )
 
 # `:20:` is the transaction reference, once per statement. It is therefore where one statement
-# block ends and the next begins in a file that concatenates several.
-_BLOCK_START = re.compile(r"(?m)^(?=:20:)")
+# block ends and the next begins in a file that concatenates several. The newline after the
+# first colon is part of the tag syntax and banks do use it (`self-provided/sparkassen.sta`
+# wraps `:86:` that way): missing a wrapped `:20:` would glue two statements, and two accounts,
+# into one block whose balances no longer belong to its entries.
+_BLOCK_START = re.compile(r"(?m)^(?=:\n?20:)")
+_ANY_TAG = re.compile(r"(?m)^:\n?(?:\d{2}|NS)[A-Z]?:")
+_STATEMENT_LINE = re.compile(r"(?m)^:\n?61:")
+_REFERENCE = re.compile(r"(?m)^:\n?20:(?P<reference>.*)")
 
 _OBJECT_ADDRESS = re.compile(r" at 0x[0-9a-f]+")
+
+# SWIFT field :61: subfield 3, the debit/credit mark. `RC` is the reversal OF a credit, so the
+# money leaves the account, and `RD` the reversal of a debit. `mt940` negates on `D` alone,
+# which leaves a reversed credit positive: the sign is taken from this set instead.
+_DEBIT_MARKS = frozenset({"D", "RC"})
+
+# Balance tags, in the order they are trusted. `:60F:`/`:62F:` are the statement's own opening
+# and closing; `:60:`/`:60M:` are the continuation forms, used when a bank splits one statement
+# over several files or pages. Falling back to them keeps a real figure instead of a null, and
+# the fallback is always named because a continuation balance is not the same claim.
+_OPENING = ("final_opening_balance", "opening_balance", "intermediate_opening_balance")
+_CLOSING = ("final_closing_balance", "closing_balance", "intermediate_closing_balance")
+_BALANCE_TAG = {
+    "final_opening_balance": ":60F:",
+    "opening_balance": ":60:",
+    "intermediate_opening_balance": ":60M:",
+    "final_closing_balance": ":62F:",
+    "closing_balance": ":62:",
+    "intermediate_closing_balance": ":62M:",
+}
 
 
 def read_mt940(data: bytes, *, path: str | None = None) -> Statement:
@@ -83,8 +145,12 @@ def read_mt940(data: bytes, *, path: str | None = None) -> Statement:
     currencies = _distinct(_currency(block.currency) for block in blocks)
     account = accounts[0] if len(accounts) == 1 else None
     currency = currencies[0] if len(currencies) == 1 else None
-    opening = _balance(blocks, "final_opening_balance", last=False)
-    closing = _balance(blocks, "final_closing_balance", last=True)
+
+    opening = closing = None
+    if len(accounts) <= 1 and len(currencies) <= 1:
+        opening, opening_warning = _balance(blocks, _OPENING, last=False)
+        closing, closing_warning = _balance(blocks, _CLOSING, last=True)
+        warnings += [w for w in (opening_warning, closing_warning) if w is not None]
 
     if len(accounts) > 1:
         warnings.append(
@@ -105,13 +171,12 @@ def read_mt940(data: bytes, *, path: str | None = None) -> Statement:
                 field="currency",
                 value=", ".join(currencies),
                 message=(
-                    f"the file holds {len(currencies)} currencies, so the statement currency is "
-                    f"left null; every entry keeps the currency of its own block"
+                    f"the file holds {len(currencies)} currencies, so the statement currency "
+                    f"and both balances are left null; every entry keeps the currency of its "
+                    f"own block"
                 ),
             )
         )
-    if len(accounts) > 1 or len(currencies) > 1:
-        opening = closing = None
 
     if not any(block.data or block.transactions for block in blocks):
         warnings.append(
@@ -202,25 +267,44 @@ def _parse(text: str) -> tuple[list[Transactions], list[ReadWarning]]:
                 ),
             )
         )
+    # The reference and the count of `:61:` lines are what make two lost blocks two warnings
+    # instead of one: they are deduplicated on content, and "could not be read" is the same
+    # sentence for every block. A report that collapses two losses into one under-states how
+    # much of the file is missing, which is the silent loss this doctrine forbids.
     warnings += [
         ReadWarning(
             rule="tag",
             field=None,
-            value=None,
-            message=f"a statement block could not be read and was left out: {reason}",
+            value=_reference(block),
+            message=(
+                f"a statement block could not be read and was left out, "
+                f"{_lost(block)} lost with it: {reason}"
+            ),
         )
-        for reason in failures
+        for block, reason in failures
     ]
     return parsed, warnings
 
 
-def _attempt(blocks: list[str], tags: _Tags) -> tuple[list[Transactions], list[str]]:
+def _attempt(blocks: list[str], tags: _Tags) -> tuple[list[Transactions], list[tuple[str, str]]]:
     """Every block read with one dialect: what came out, and why the rest did not."""
-    attempt = [_parse_block(block, tags) for block in blocks]
+    attempt = [(block, _parse_block(block, tags)) for block in blocks]
     return (
-        [block for block in attempt if isinstance(block, Transactions)],
-        [reason for reason in attempt if isinstance(reason, str)],
+        [result for _, result in attempt if isinstance(result, Transactions)],
+        [(block, result) for block, result in attempt if isinstance(result, str)],
     )
+
+
+def _lost(block: str) -> str:
+    """How many entries a block took with it. A count is what makes the loss measurable."""
+    count = len(_STATEMENT_LINE.findall(block))
+    return f"{count} statement line{'' if count == 1 else 's'}"
+
+
+def _reference(block: str) -> str | None:
+    """The `:20:` reference of a block, which is how a bank names one statement."""
+    match = _REFERENCE.search(block)
+    return _text(match.group("reference")) if match else None
 
 
 def _split(text: str) -> list[str]:
@@ -230,8 +314,13 @@ def _split(text: str) -> list[str]:
     keeps the balances honest: in a file split per day, the merged view reports the LAST block's
     opening balance next to the whole month's entries. A file with no `:20:` at all is still a
     statement, and a real one: two corpus files start straight at `:61:`.
+
+    Whatever sits BEFORE the first `:20:` is a block too, whenever it holds a tag. Nine corpus
+    files open on a SWIFT envelope (`{1:F01...}{4:`) or a bank header, which carries no tag and
+    is rightly dropped; but a file whose entries start before its first `:20:` would otherwise
+    lose them all without a word.
     """
-    blocks = [block for block in _BLOCK_START.split(text) if block.lstrip().startswith(":20:")]
+    blocks = [block for block in _BLOCK_START.split(text) if _ANY_TAG.search(block)]
     return blocks or [text]
 
 
@@ -247,7 +336,7 @@ def _parse_block(block: str, tags: _Tags) -> Transactions | str:
     decimal.InvalidOperation. Enumerating them is how the next bank gets an exception out of a
     reader whose contract is to never raise.
     """
-    parsed = Transactions(tags=dict(tags) if tags else None)
+    parsed = Transactions(tags=dict(tags) if tags else None, processors=_PROCESSORS)
     try:
         parsed.parse(block)
     except Exception as error:
@@ -256,6 +345,32 @@ def _parse_block(block: str, tags: _Tags) -> Transactions | str:
         # cannot diff is a report that never tells you a bank changed something.
         return f"{type(error).__name__}: {_OBJECT_ADDRESS.sub('', str(error))}"
     return parsed
+
+
+def _record_impossible_date(
+    _transactions: Transactions, _tag: mt940.tags.Tag, tag_dict: _TagDict, *_args: Any
+) -> _TagDict:
+    """Keep the day the file wrote when the calendar refuses it.
+
+    `mt940` repairs 30 February into the last day of the month, one line further down the same
+    processor chain, and repairing it is the right call: the entry is sound and dropping it
+    would lose a real movement. Repairing it in SILENCE is not, because the value date is what a
+    reconciliation matches on. So the original is captured here, before the repair, and the
+    mapping turns it into a `date` warning.
+    """
+    year, month, day = tag_dict.get("year"), tag_dict.get("month"), tag_dict.get("day")
+    # Same arithmetic as the repair itself, on the same two-digit year, so that this fires
+    # exactly when the repair does and never on a date the parser left alone.
+    if month == "02" and year and day and int(day, 10) > calendar.monthrange(int(year, 10), 2)[1]:
+        tag_dict["impossible_value_date"] = f"{year}{month}{day}"
+    return tag_dict
+
+
+# The library's own statement pre-processor is kept and merely preceded: dropping it would turn
+# an impossible date back into an exception, which costs the whole block.
+_PROCESSORS: dict[str, list[Callable[..., _TagDict]]] = {
+    "pre_statement": [_record_impossible_date, date_fixup_pre_processor]
+}
 
 
 def _transaction(
@@ -272,6 +387,21 @@ def _transaction(
         return None, [ReadWarning(rule="tag", field=field, value=None, message=message)]
 
     warnings: list[ReadWarning] = []
+    impossible = _text(data.get("impossible_value_date"))
+    if impossible is not None:
+        warnings.append(
+            ReadWarning(
+                rule="date",
+                field="date",
+                value=impossible,
+                message=(
+                    f"the file dates this entry {impossible} (YYMMDD), a day February does not "
+                    f"have; the entry is kept on {date.isoformat()} and the date it claimed is "
+                    f"in its raw fields"
+                ),
+            )
+        )
+
     # `id` is the SWIFT transaction type identification code (NTRF, NCHK...), the only field
     # here with a cross-format meaning. `transaction_code` is the German GVC, a national code,
     # and it stays in `raw` where a caller who wants it can still find it.
@@ -297,7 +427,7 @@ def _transaction(
     return (
         Transaction(
             date=date,
-            amount=amount,
+            amount=_signed(amount, data.get("status")),
             currency=currency,
             raw={key: _json_safe(value) for key, value in data.items()},
             booking_date=_date(data.get("entry_date")),
@@ -319,18 +449,48 @@ def _transaction(
     )
 
 
-def _balance(blocks: list[Transactions], key: str, *, last: bool) -> Decimal | None:
-    """The first, or the last, block that carries this balance.
+def _signed(amount: Decimal, status: object) -> Decimal:
+    """The sign of an entry, taken from its debit/credit mark rather than from the parser.
+
+    `mt940` negates the amount when the mark is `D` and leaves it alone otherwise, which is
+    right for `C` and `RD` and WRONG for `RC`, a reversed credit: the money went out.
+    `betterplace/sepa_mt9401.sta` settles it by arithmetic rather than by reading the standard,
+    its `:60F:` and `:62F:` only balance if its 204,88 `RC` entry is negative.
+    """
+    return -abs(amount) if (_text(status) or "").upper() in _DEBIT_MARKS else abs(amount)
+
+
+def _balance(
+    blocks: list[Transactions], keys: tuple[str, ...], *, last: bool
+) -> tuple[Decimal | None, ReadWarning | None]:
+    """The first, or the last, block that carries one of these balances.
 
     Not "the last block's balance": in `jejik/abnamro.sta` only the first block closes, and
     reading the closing balance off the last block would report none.
+
+    The tags are tried in order of authority, so a `:60F:` anywhere in the file always beats a
+    `:60M:`. A file that only ever carries the continuation form is a page of a longer
+    statement; its balance is a real figure and reporting null instead would lose it, so it is
+    used and the warning says which tag it came from.
     """
     ordered = list(reversed(blocks)) if last else list(blocks)
-    for block in ordered:
-        amount = _decimal(getattr(block.data.get(key), "amount", None))
-        if amount is not None:
-            return amount
-    return None
+    for key in keys:
+        for block in ordered:
+            amount = _decimal(getattr(block.data.get(key), "amount", None))
+            if amount is None:
+                continue
+            if key == keys[0]:
+                return amount, None
+            return amount, ReadWarning(
+                rule="tag",
+                field=key,
+                value=str(amount),
+                message=(
+                    f"no {_BALANCE_TAG[keys[0]]} in this file, the balance is the "
+                    f"{_BALANCE_TAG[key]} of a continuation page and not the statement's own"
+                ),
+            )
+    return None, None
 
 
 def _distinct(values: Iterable[str | None]) -> list[str]:
