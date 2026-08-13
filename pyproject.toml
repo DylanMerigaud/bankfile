@@ -80,7 +80,7 @@ bankfile-mcp = "bankfile.mcp:main"
 
 [dependency-groups]
 # mcp is in the dev group as well so that ruff and mypy actually check the server.
-dev = ["pytest>=8", "pytest-cov>=5", "mypy>=1.11", "ruff>=0.6", "mcp>=2.0"]
+dev = ["pytest>=8", "pytest-cov>=5", "mypy>=1.11", "ruff>=0.16.2", "mcp>=2.0"]
 
 [tool.ruff]
 line-length = 100
