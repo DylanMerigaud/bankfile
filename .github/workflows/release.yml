@@ -90,6 +90,17 @@ jobs:
             exit 1
           fi
 
+      # The tooling comes from the ref this run was started on, the code that ships comes from the
+      # tag, and the split is the point: a hand start against an old tag has to be able to use
+      # today's checks. v0.2.0 predates both scripts below, so reading them out of the tag would
+      # make the fix unusable on the very release it was written for.
+      # After the build on purpose: an extra directory sitting in the workspace beforehand is a
+      # directory that can ride the sdist.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tools
+
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           # Idempotent on purpose. 0.1.0 was published by hand before this workflow existed,
@@ -102,7 +113,9 @@ jobs:
       # re-run needs and also what would hide a release that never happened. So the claim gets
       # measured against the registry itself rather than against the exit code of the uploader.
       - name: the version must be installable from PyPI
-        run: python3 scripts/check_published.py bankfile "${{ steps.target.outputs.version }}" --wait 180
+        run: |
+          python3 .release-tools/scripts/check_published.py \
+            bankfile "${{ steps.target.outputs.version }}" --wait 180
 
       # A tag with no release is invisible: it does not appear on the repository front page, it
       # sends no notification, and a reader looking for what changed finds nothing. The body is
@@ -111,12 +124,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python3 scripts/changelog_section.py "${{ steps.target.outputs.version }}" > release-notes.md
+          # The notes are read out of the TAG's changelog, which is the one that describes this
+          # version, by the script from the ref that started the run.
+          python3 .release-tools/scripts/changelog_section.py \
+            "${{ steps.target.outputs.version }}" > "$RUNNER_TEMP/release-notes.md"
           if gh release view "${{ steps.target.outputs.tag }}" >/dev/null 2>&1; then
-            gh release edit "${{ steps.target.outputs.tag }}" --notes-file release-notes.md
+            gh release edit "${{ steps.target.outputs.tag }}" --notes-file "$RUNNER_TEMP/release-notes.md"
           else
             gh release create "${{ steps.target.outputs.tag }}" \
               --title "${{ steps.target.outputs.tag }}" \
-              --notes-file release-notes.md \
+              --notes-file "$RUNNER_TEMP/release-notes.md" \
               --verify-tag
           fi
