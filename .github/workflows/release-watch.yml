@@ -1,0 +1,79 @@
+name: release-watch
+
+# Nothing was watching the registry, so v0.2.0 sat tagged and unpublished from 2026-08-06 to
+# 2026-08-14 while `pip install bankfile` kept serving 0.1.1, which welds a German account number
+# onto the front of the counterparty name on 59 transactions of the corpus. Every dashboard was
+# green throughout: the release workflow had not failed, it had never started.
+#
+# This job asks the one question none of them asked. It compares every version tag against what
+# PyPI will actually serve, so the gap between "tagged" and "released" cannot last a week again.
+on:
+  schedule:
+    # Daily. GitHub stops scheduled workflows on a repository with no activity for 60 days, so a
+    # silence here is itself worth reading as a signal rather than as an all clear.
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  tag-vs-pypi:
+    runs-on: ubuntu-latest
+    steps:
+      # Tags are the subject of this job, so the shallow default clone is not enough.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: every version tag must be installable
+        id: check
+        run: |
+          missing=""
+          for tag in $(git tag --list 'v*' --sort=-v:refname); do
+            version="${tag#v}"
+            if python3 scripts/check_published.py bankfile "$version"; then
+              continue
+            fi
+            missing="$missing $tag"
+          done
+          if [ -n "$missing" ]; then
+            echo "missing=${missing# }" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # A red run in a repository one person reads is a red run nobody sees. The issue is the
+      # part that actually reaches somebody, and it is reused rather than reopened every day so
+      # the signal does not turn into noise it is rational to mute.
+      - name: say so where it will be read
+        if: failure() && steps.check.outputs.missing != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MISSING: ${{ steps.check.outputs.missing }}
+        run: |
+          # Created first and unconditionally, because `gh issue list --label` errors out on a
+          # label that does not exist yet and the very first gap would then be reported nowhere.
+          gh label create release-gap --color B60205 \
+            --description "A version tag that never reached the registry" 2>/dev/null || true
+
+          cat > issue-body.md <<BODY
+          These tags exist in this repository and the matching version is not installable from PyPI:
+
+          $MISSING
+
+          A tag that nobody can install is a tag that lies about what is released. To ship one,
+          start the release workflow by hand against it: Actions, release, Run workflow, then the
+          tag field. That trigger exists because the tags are signed and must not be deleted and
+          recreated just to re-arm a push trigger.
+
+          Raised by .github/workflows/release-watch.yml
+          BODY
+
+          title="Tagged but not on PyPI: $MISSING"
+          existing=$(gh issue list --state open --label release-gap --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body-file issue-body.md
+          else
+            gh issue create --title "$title" --body-file issue-body.md --label release-gap
+          fi

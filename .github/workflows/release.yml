@@ -1,21 +1,55 @@
 name: release
 
 # Publishes to PyPI when a version tag is pushed.
-# Trusted publishing (OIDC): no PYPI_TOKEN secret. Configure once on pypi.org
+# Trusted publishing (OIDC): no PYPI_TOKEN secret. Configured once on pypi.org
 # (project -> Publishing -> Trusted publisher: GitHub Actions, repo DylanMerigaud/bankfile,
-# workflow release.yml).
+# workflow release.yml, environment release).
 on:
   push:
     tags: ["v*"]
+
+  # v0.2.0 was tagged and pushed on 2026-08-06 at 20:33:59Z and GitHub created no workflow run at
+  # all for that push: the five other GitHub Apps installed on this repository each recorded a
+  # check suite within a second, the github-actions app recorded none, so neither ci nor release
+  # started. The tag was right, the packaged version matched it, the workflow was byte identical
+  # to the one that had shipped v0.1.1 fifteen hours earlier. A dropped trigger, and nothing to
+  # look at afterwards.
+  #
+  # The tags here are signed, so deleting one and pushing it again to re-arm the trigger would
+  # destroy the signature and rewrite what a published version points at. Hence a hand start
+  # against a tag that already exists.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to release, for example v0.2.0"
+        required: true
+        type: string
 
 jobs:
   pypi:
     runs-on: ubuntu-latest
     environment: release
     permissions:
-      id-token: write
+      id-token: write # PyPI trusted publishing
+      contents: write # create the GitHub Release for this tag
     steps:
+      - name: the tag being released
+        id: target
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          case "$tag" in
+            v*) ;;
+            *) echo "refusing to release '$tag': a release tag starts with v" >&2; exit 1 ;;
+          esac
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      # Always the tag, never the branch. On a hand start the workflow file comes from the
+      # default branch while the code that gets tested and shipped must come from the tag, or
+      # the release would carry a version number for a tree nobody tagged.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.target.outputs.tag }}
       - uses: astral-sh/setup-uv@v5
 
       # The tag and the packaged version must agree. PyPI refuses to re-upload a filename, so
@@ -24,23 +58,38 @@ jobs:
       # release workflow in this author's repositories guards this; this one did not.
       - name: the tag must match the packaged version
         run: |
-          tag="${GITHUB_REF_NAME#v}"
           packaged=$(uv run --no-project python -c \
             "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
-          if [ "$tag" != "$packaged" ]; then
-            echo "tag $tag does not match pyproject version $packaged" >&2
+          if [ "${{ steps.target.outputs.version }}" != "$packaged" ]; then
+            echo "tag ${{ steps.target.outputs.version }} does not match pyproject version $packaged" >&2
             exit 1
           fi
 
-      # Never publish something the suite has not seen. A release is the one moment where a
-      # green CI on the branch is not enough: the tag is what people install.
+      # Never publish something the suite has not seen. A release is the one moment where a green
+      # CI on the branch is not enough: the tag is what people install, and a tagged commit is not
+      # necessarily a commit CI ever ran. 7a6430f, the commit v0.2.0 points at, is exactly that
+      # case: the same dropped trigger meant no ci run for it either.
       - run: uv sync --all-groups
       - run: uv run ruff check .
+      - run: uv run ruff format --check .
       - run: uv run mypy
       - run: uv run pytest
       - run: python3 scripts/validate_corpus.py
 
       - run: uv build
+
+      # The two packaging assertions from ci.yml, repeated here because this job is the one that
+      # uploads. A packaging defect is invisible to a test suite run from the source tree, and
+      # once a filename is on PyPI it cannot be replaced.
+      - name: the wheel must ship its type marker
+        run: unzip -l dist/*.whl | grep -q 'bankfile/py.typed'
+      - name: no borrowed fixture may ride the sdist
+        run: |
+          if tar tzf dist/*.tar.gz | grep -E 'tests/fixtures/.*\.(sta|txt|ofx|qfx)$'; then
+            echo "a borrowed bank fixture is inside the sdist" >&2
+            exit 1
+          fi
+
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           # Idempotent on purpose. 0.1.0 was published by hand before this workflow existed,
@@ -48,3 +97,26 @@ jobs:
           # NOT weaken the version guard above, which still refuses a tag that disagrees with
           # what is packaged.
           skip-existing: true
+
+      # skip-existing makes the step above succeed when it uploaded nothing, which is what a
+      # re-run needs and also what would hide a release that never happened. So the claim gets
+      # measured against the registry itself rather than against the exit code of the uploader.
+      - name: the version must be installable from PyPI
+        run: python3 scripts/check_published.py bankfile "${{ steps.target.outputs.version }}" --wait 180
+
+      # A tag with no release is invisible: it does not appear on the repository front page, it
+      # sends no notification, and a reader looking for what changed finds nothing. The body is
+      # read out of CHANGELOG.md rather than retyped, so the two cannot drift.
+      - name: publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/changelog_section.py "${{ steps.target.outputs.version }}" > release-notes.md
+          if gh release view "${{ steps.target.outputs.tag }}" >/dev/null 2>&1; then
+            gh release edit "${{ steps.target.outputs.tag }}" --notes-file release-notes.md
+          else
+            gh release create "${{ steps.target.outputs.tag }}" \
+              --title "${{ steps.target.outputs.tag }}" \
+              --notes-file release-notes.md \
+              --verify-tag
+          fi
