@@ -31,15 +31,31 @@ jobs:
         id: check
         run: |
           missing=""
+          unreachable=0
           for tag in $(git tag --list 'v*' --sort=-v:refname); do
             version="${tag#v}"
-            if python3 scripts/check_published.py bankfile "$version"; then
+            # This step runs under `bash -e`, so the check cannot be a bare statement followed
+            # by `status=$?`: a non-zero exit would abort the step right there, before that line
+            # ever runs. `||` is, like an `if` condition, exempt from -e, so it is what lets a
+            # failing check be inspected instead of killing the job outright.
+            status=0
+            python3 scripts/check_published.py bankfile "$version" || status=$?
+            if [ "$status" -eq 0 ]; then
               continue
+            elif [ "$status" -eq 2 ]; then
+              # PyPI could not be reached, not answered "no". That is a network blip, not a
+              # release gap, and must not be filed as one: see check_published.py's exit codes.
+              unreachable=1
+            else
+              missing="$missing $tag"
             fi
-            missing="$missing $tag"
           done
           if [ -n "$missing" ]; then
             echo "missing=${missing# }" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          if [ "$unreachable" -eq 1 ]; then
+            echo "PyPI was unreachable for at least one tag; red for visibility, no issue filed over a network blip." >&2
             exit 1
           fi
 
