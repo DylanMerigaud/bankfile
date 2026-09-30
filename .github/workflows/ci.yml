@@ -9,8 +9,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
       - run: uv sync --all-groups
       - run: uv run ruff check .
       - run: uv run ruff format --check .
@@ -25,8 +25,8 @@ jobs:
         # syntax gains.
         python: ["3.10", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
       - run: uv sync --all-groups
       - run: uv run --python ${{ matrix.python }} pytest
 
@@ -37,8 +37,8 @@ jobs:
     # 4.x, so the metadata promised an installation that could not work.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
       - run: uv sync --all-groups
       - run: uv pip install "mt-940==5.0.0"
       - run: uv run --no-sync pytest
@@ -50,8 +50,8 @@ jobs:
     # Decimal, and nothing here would have noticed until somebody complained.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
       - run: uv build
       - name: the wheel must ship its type marker
         run: unzip -l dist/*.whl | grep -q 'bankfile/py.typed'
@@ -73,8 +73,8 @@ jobs:
     # deviations of banks cannot be invented. So it is validated just like the tests.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: python3 scripts/validate_corpus.py

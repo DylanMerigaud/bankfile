@@ -47,10 +47,10 @@ jobs:
       # Always the tag, never the branch. On a hand start the workflow file comes from the
       # default branch while the code that gets tested and shipped must come from the tag, or
       # the release would carry a version number for a tree nobody tagged.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ steps.target.outputs.tag }}
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
 
       # The tag and the packaged version must agree. PyPI refuses to re-upload a filename, so
       # tagging v0.1.0 while pyproject still says 0.0.1 publishes 0.0.1, burns that version
@@ -96,7 +96,7 @@ jobs:
       # make the fix unusable on the very release it was written for.
       # After the build on purpose: an extra directory sitting in the workspace beforehand is a
       # directory that can ride the sdist.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: .release-tools
